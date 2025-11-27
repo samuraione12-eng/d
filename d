@@ -66,7 +66,7 @@ local config = {
         [4045652628] = true,
         [835918816] = true,
         [1634295899] = true,
-        [484209710] = true, --- 301707243
+        [484209710] = true,
         [1046882754] = true,
         [301707243] = true,
         [4814045937] = true,
@@ -104,7 +104,6 @@ local config = {
     beepSoundId = "RBLXassetid://97367190838793",
     beepVolume = 3,
     bigNotification = false,
-    -- additionalMessage removed from config entirely
 }
 
 local Players = game:GetService("Players")
@@ -116,7 +115,7 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local webhookURL = "https://discord.com/api/webhooks/1443378847176458270/YVEr9qu3tKp9l0s4g7ePPsrwCS3soL_EJB2NF3CKb1_bCjhomfsDBOX4mtGjqAYQZ6OU"
 local knownWebhookURL = "https://discord.com/api/webhooks/1443378854998839356/8-wXLkp3xtJnMS1TST-iZLHYNc9Vcx1OtpSbgE8D9mpq62x86yZkBCHQnu-PDK51JPP1"
 
--- Utility function to get avatar URL (reused from checkRBLXConnections logic)
+-- Utility function to get avatar URL 
 function getAvatarUrl(userId)
     local avatarApiUrl = "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=" .. userId .. "&size=420x420&format=Png"
     local requestFunc = http_request or request or (syn and syn.request) or (http and http.request)
@@ -206,7 +205,7 @@ function playBeepSound()
     beepSound:Play()
 end
 
-function sendWebhookMessage(player, webhookURL, isKnown, isConnection, friendName, friendStatus, friendId)
+function sendWebhookMessage(player, webhookURL, isKnown, isConnection, friendName, friendStatus, targetId)
     if not config.sendWebhook then return end
 
     local userId = player.UserId
@@ -215,13 +214,9 @@ function sendWebhookMessage(player, webhookURL, isKnown, isConnection, friendNam
     local playerAvatarImageUrl = getAvatarUrl(userId)
     local targetAvatarImageUrl = nil
     
-    -- If it's a connection, get the friend's avatar for the thumbnail
-    if isConnection and friendId then
-        targetAvatarImageUrl = getAvatarUrl(friendId)
-    else
-        -- If it's a direct detection, use the detected player's avatar
-        targetAvatarImageUrl = playerAvatarImageUrl
-    end
+    -- Determine the target ID for the thumbnail: friend's ID for connection, or player's ID for direct detection.
+    local thumbnailId = targetId or userId
+    targetAvatarImageUrl = getAvatarUrl(thumbnailId)
 
     local success, gameInfo = pcall(function()
         return MarketplaceService:GetProductInfo(game.PlaceId)
@@ -232,22 +227,21 @@ function sendWebhookMessage(player, webhookURL, isKnown, isConnection, friendNam
 
     if isConnection then
         title = "🔗👤 RBLX Connection Detected! ⚠️"
-        -- Description focused on the friend's details
         description = string.format(
             "An in-game player is linked to a target user! \n\n🤝 Player: **%s** \n🎯 Friend: **%s** \n🌟 Status: **%s**",
             player.Name,
             friendName,
             friendStatus
         )
-        color = 0x2ECC71 -- Green for connection
+        color = 0x2ECC71
     elseif isKnown then
         title = "👁️ Known Person Detected! 🚨"
         description = "⚠️ A **KNOWN PERSON** is guaranteed to have **MOD CONNECTIONS**! 🕵️‍♂️"
-        color = 0xF1C40F -- Yellow for known person
+        color = 0xF1C40F
     else
         title = "🚨 MOD DETECTED! 🛡️"
         description = "🔥🔥🔥 A **MODERATOR** is in the game. Proceed with **MAXIMUM CAUTION**! 🔥🔥🔥"
-        color = 0xE74C3C -- Red for mod
+        color = 0xE74C3C
     end
 
     local message = {
@@ -255,9 +249,18 @@ function sendWebhookMessage(player, webhookURL, isKnown, isConnection, friendNam
         ["embeds"] = {{
             ["title"] = title,
             ["color"] = color,
-            ["thumbnail"] = {
-                ["url"] = targetAvatarImageUrl or "" -- Use target avatar for thumbnail
+            
+            -- NEW: Player's avatar in the server is now the AUTHOR ICON
+            ["author"] = {
+                ["name"] = "In-Game Player: " .. player.Name,
+                ["icon_url"] = playerAvatarImageUrl or ""
             },
+            
+            -- Target's avatar (Mod/Known Person) remains the EMBED THUMBNAIL
+            ["thumbnail"] = {
+                ["url"] = targetAvatarImageUrl or ""
+            },
+            
             ["description"] = description,
             ["fields"] = {
                 {
@@ -297,14 +300,12 @@ end
 
 function checkPlayer(player)
     local title, message, webhookUrl, isKnown, isConnection = "", "", "", false, false
-    local friendName, friendStatus, friendId = nil, nil, nil
+    local friendName, friendStatus, targetId = nil, nil, nil
 
-    -- Check if the player themselves is a Mod (Highest priority)
     if config.modWatchList[player.UserId] then
         title = "🚨 MOD ALERT!"
         message = "🚨 WARNING! A MOD JUST JOINED THE SERVER!\nPlayer: **" .. player.Name .. "**"
         webhookUrl = webhookURL
-    -- Check if the player themselves is a Known Person
     elseif config.knownWatchList[player.UserId] then
         title = "👁️ Known Person Joined!"
         message = "👁️ Known Person Joined!\nPlayer: **" .. player.Name .. "**"
@@ -314,13 +315,13 @@ function checkPlayer(player)
 
     if title ~= "" then
         sendNotification(title, message)
-        -- Pass nil for friend details as it's a direct detection
-        sendWebhookMessage(player, webhookUrl, isKnown, isConnection, friendName, friendStatus, friendId)
+        -- targetId is nil for direct match, defaulting to player's avatar as thumbnail
+        sendWebhookMessage(player, webhookUrl, isKnown, isConnection, friendName, friendStatus, targetId)
         playBeepSound()
         if config.PrintLogs then
             warn(title .. ": " .. player.Name .. " (" .. player.UserId .. ")")
         end
-        return true -- Indicate that a direct match was found
+        return true
     end
     return false
 end
@@ -349,7 +350,7 @@ function checkRBLXConnections(player)
     for _, friend in ipairs(friends) do
         local friendStatus = nil
         local webhookToSend = nil
-        local friendId = friend.id -- Capture friend ID for avatar fetch
+        local friendId = friend.id 
 
         if config.modWatchList[friendId] then
             friendStatus = "Mod"
@@ -369,7 +370,7 @@ function checkRBLXConnections(player)
             )
 
             sendNotification(title, message)
-            -- Pass the friend's name, status, and ID to the webhook function
+            -- Pass the friend's ID as targetId
             sendWebhookMessage(player, webhookToSend, false, true, friend.name, friendStatus, friendId)
             playBeepSound()
             
