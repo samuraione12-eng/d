@@ -99,7 +99,7 @@ local config = {
     notify = true,
     RBLXConnections = true,
     PrintLogs = true,
-    notifyDuration = 11,
+    notifyDuration = 5, -- SET TO 5 SECONDS FOR DURATION
     sendWebhook = true,
     beepSoundId = "RBLXassetid://97367190838793",
     beepVolume = 3,
@@ -119,6 +119,8 @@ local knownWebhookURL = "https://discord.com/api/webhooks/1443378854998839356/8-
 function sendNotification(title, text)
     if config.notify then
         if config.bigNotification then
+            -- This path (bigNotification = true) still creates a custom UI
+            -- with a button labeled "I understand" which must be clicked to dismiss.
             local screenGui = Instance.new("ScreenGui")
             screenGui.Name = "CustomNotification"
             screenGui.Parent = game:GetService("CoreGui")
@@ -165,11 +167,12 @@ function sendNotification(title, text)
                 screenGui:Destroy()
             end)
         else
+            -- This path (simple notification) uses the system button and the new 5-second duration
             StarterGui:SetCore("SendNotification", {
                 Title = title,
                 Text = text,
-                Duration = config.notifyDuration,
-                Button1 = "OK",
+                Duration = config.notifyDuration, -- 5 seconds, or until Button1 is clicked
+                Button1 = "OK", -- Button for immediate dismissal
                 Callback = function() end,
                 TextSize = 24,
                 Position = UDim2.new(0.5, -200, 0.5, -100),
@@ -187,7 +190,7 @@ function playBeepSound()
     beepSound:Play()
 end
 
-function sendWebhookMessage(player, webhookURL, isKnown, isConnection)
+function sendWebhookMessage(player, webhookURL, isKnown, isConnection, friendName, friendStatus)
     if not config.sendWebhook then return end
 
     local userId = player.UserId
@@ -216,26 +219,47 @@ function sendWebhookMessage(player, webhookURL, isKnown, isConnection)
     end)
 
     local gameName = success and gameInfo.Name or "Unknown"
-    local title = isKnown and "Known Person Detected" or "Mod Detected"
-    local description = isKnown and "⚠️A KNOWN PERSON IS GURANTEED TO HAVE MOD CONNECTIONS⚠️" or ":rotating_light: A MODERATOR WILL BAN YOU IF YOU GET CAUGHT CHEATING IMMEDIATLY :rotating_light:"
+    local title, description, color = "", "", 0
+
     if isConnection then
-        title = "Connection Detected"
-        description = "A Connection Of A Mod/Known Person Is In Your Game"
+        title = "🔗 RBLX Connection Detected!"
+        -- Ensures the friend's name and status are shown in the webhook description
+        description = string.format(
+            "**%s** is in your game and is **friends** with a detected **%s**.\nFriend's Name: **%s**\nFriend's Status: **%s**\n" .. config.additionalMessage,
+            player.Name,
+            friendStatus,
+            friendName,
+            friendStatus
+        )
+        color = 0x2ECC71 -- Green for connection
+    elseif isKnown then
+        title = "👁️ Known Person Detected!"
+        description = "⚠️ A **KNOWN PERSON** is guaranteed to have **MOD CONNECTIONS**! ⚠️\n" .. config.additionalMessage
+        color = 0xF1C40F -- Yellow for known person
+    else
+        title = "🚨 Mod Detected!"
+        description = ":rotating_light: A **MODERATOR** will **BAN YOU** if you get caught cheating **IMMEDIATELY**! :rotating_light:\n" .. config.additionalMessage
+        color = 0xE74C3C -- Red for mod
     end
 
     local message = {
         ["username"] = "Roblox Logger",
         ["embeds"] = {{
             ["title"] = title,
-            ["color"] = 0,
+            ["color"] = color,
             ["thumbnail"] = {
                 ["url"] = avatarImageUrl or ""
             },
-            ["description"] = description .. "\n" .. config.additionalMessage,
+            ["description"] = description,
             ["fields"] = {
                 {
-                    ["name"] = "Username",
+                    ["name"] = "Player Username",
                     ["value"] = player.Name,
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "Player ID",
+                    ["value"] = tostring(player.UserId),
                     ["inline"] = true
                 },
                 {
@@ -243,21 +267,12 @@ function sendWebhookMessage(player, webhookURL, isKnown, isConnection)
                     ["value"] = gameName,
                     ["inline"] = true
                 },
-                {
-                    ["name"] = "Place ID",
-                    ["value"] = tostring(game.PlaceId),
-                    ["inline"] = true
-                },
+                -- Only essential game info remains for brevity
                 {
                     ["name"] = "Job ID",
                     ["value"] = game.JobId,
                     ["inline"] = true
                 },
-                {
-                    ["name"] = "Game ID",
-                    ["value"] = game.GameId,
-                    ["inline"] = true
-                }
             },
             ["footer"] = {
                 ["text"] = "Logged at " .. os.date("%Y-%m-%d %H:%M:%S")
@@ -279,24 +294,32 @@ function sendWebhookMessage(player, webhookURL, isKnown, isConnection)
 end
 
 function checkPlayer(player)
+    local title, message, webhookUrl, isKnown, isConnection = "", "", "", false, false
 
+    -- Check if the player themselves is a Mod (Highest priority)
     if config.modWatchList[player.UserId] then
-        local message = "⚠️ Mod Joined!\n" .. player.Name .. " (UserId: " .. player.UserId .. ") is in the game!"
-        sendNotification("⚠️ Mod Joined!", message)
-        sendWebhookMessage(player, webhookURL, false, false)
-        playBeepSound()
-        if config.PrintLogs then
-            warn("⚠️ Mod detected: " .. player.Name .. " (" .. player.UserId .. ")")
-        end
+        title = "🚨 MOD ALERT!"
+        -- Direct Mod join message as requested
+        message = "🚨 WARNING! A MOD JUST JOINED THE SERVER!\nPlayer: **" .. player.Name .. "**"
+        webhookUrl = webhookURL
+    -- Check if the player themselves is a Known Person
     elseif config.knownWatchList[player.UserId] then
-        local message = "🔍 Known Person Joined!\n" .. player.Name .. " (UserId: " .. player.UserId .. ") is in the game!"
-        sendNotification("🔍 Known Person Joined!", message)
-        sendWebhookMessage(player, knownWebhookURL, true, false)
+        title = "👁️ Known Person Joined!"
+        message = "👁️ Known Person Joined!\nPlayer: **" .. player.Name .. "**"
+        webhookUrl = knownWebhookURL
+        isKnown = true
+    end
+
+    if title ~= "" then
+        sendNotification(title, message)
+        sendWebhookMessage(player, webhookUrl, isKnown, isConnection)
         playBeepSound()
         if config.PrintLogs then
-            warn("🔍 Known person detected: " .. player.Name .. " (" .. player.UserId .. ")")
+            warn(title .. ": " .. player.Name .. " (" .. player.UserId .. ")")
         end
+        return true -- Indicate that a direct match was found
     end
+    return false
 end
 
 function checkRBLXConnections(player)
@@ -321,29 +344,66 @@ function checkRBLXConnections(player)
 
     local friends = friendsData.data
     for _, friend in ipairs(friends) do
-        if config.modWatchList[friend.id] or config.knownWatchList[friend.id] then
-            local message = "A Player In Your Game Is Connected To A Mod/Known Person.\n" .. player.Name .. " (UserId: " .. player.UserId .. ") is friends with a mod/known person!"
-            sendNotification("RBLX Connection Detected!", message)
-            sendWebhookMessage(player, webhookURL, false, true)
+        local friendStatus = nil
+        local webhookToSend = nil
+
+        if config.modWatchList[friend.id] then
+            friendStatus = "Mod"
+            webhookToSend = webhookURL
+        elseif config.knownWatchList[friend.id] then
+            friendStatus = "Known Person"
+            webhookToSend = knownWebhookURL
+        end
+
+        if friendStatus then
+            -- Use the friend's name and status in the notification
+            local title = "🔗 RBLX Connection Detected!"
+            local message = string.format(
+                "Player **%s** is friends with a **%s** named **%s**.",
+                player.Name,
+                friendStatus,
+                friend.name
+            )
+
+            sendNotification(title, message)
+            -- Pass the friend's name and status to the webhook function
+            sendWebhookMessage(player, webhookToSend, false, true, friend.name, friendStatus)
             playBeepSound()
+            
             if config.PrintLogs then
-                warn("RBLX Connection detected: " .. player.Name .. " (" .. player.UserId .. ") is friends with a mod/known person.")
+                warn(string.format(
+                    "🔗 RBLX Connection detected: %s (ID: %d) is friends with %s (ID: %d), a %s.", 
+                    player.Name, 
+                    player.UserId, 
+                    friend.name, 
+                    friend.id, 
+                    friendStatus
+                ))
             end
+            -- Only notify once per player connection found
             return
         end
     end
 end
 
 -- Notify that the script is running
-sendNotification("Mod Detector Active", "Listening for mods and known persons. Script fully executed.")
+sendNotification("✅ Mod Detector Active", "Listening for mods and known persons. Script fully executed.")
 playBeepSound() -- Play a sound for confirmation
 
+-- Initial check for players already in the game when the script executes
 for _, player in ipairs(Players:GetPlayers()) do
-    checkPlayer(player)
-    checkRBLXConnections(player)
+    -- checkPlayer returns true if a direct match (Mod/Known) is found.
+    if not checkPlayer(player) then
+        -- Only check for connections if the player themselves wasn't flagged directly.
+        checkRBLXConnections(player)
+    end
 end
 
+-- Continuous check for players joining the game
 Players.PlayerAdded:Connect(function(player)
-    checkPlayer(player)
-    checkRBLXConnections(player)
+    -- checkPlayer returns true if a direct match (Mod/Known) is found.
+    if not checkPlayer(player) then
+        -- Only check for connections if the player themselves wasn't flagged directly.
+        checkRBLXConnections(player)
+    end
 end)
