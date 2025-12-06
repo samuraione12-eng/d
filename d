@@ -1,8 +1,15 @@
+--====================================================
+--   MOD + KNOWN PERSON + RBLX CONNECTION DETECTOR
+--     ★ Fully Fixed Version (Discord-Safe Embeds)
+--====================================================
+
 local config = {
     enabled = true,
+
     modWatchList = {
-        [9774834404] = true, --// test id
-        [3342805365] = true,--// Test Id ( RBLX CONNECTIONS )
+        [2201888694] = true,
+        [9774834404] = true,
+        [3342805365] = true,
         [180434077] = true,
         [478848349] = true,
         [7171389384] = true,
@@ -25,8 +32,9 @@ local config = {
         [113947873] = true,
         [133321104] = true
     },
+
     knownWatchList = {
-        [9132728378] = false, --// test id
+        [9132728378] = false,
         [7171389384] = true,
         [3410760577] = true,
         [2722548028] = true,
@@ -96,6 +104,7 @@ local config = {
         [423324971] = true,
         [4681641674] = true
     },
+
     notify = true,
     RBLXConnections = true,
     PrintLogs = true,
@@ -106,301 +115,222 @@ local config = {
     bigNotification = false,
 }
 
+------------------------------------------------------------
+
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
 local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
 
--- Updated Webhook URLs
-local webhookURL = "https://discord.com/api/webhooks/1443378847176458270/YVEr9qu3tKp9l0s4g7ePPsrwCS3soL_EJB2NF3CKb1_bCjhomfsDBOX4mtGjqAYQZ6OU"
-local knownWebhookURL = "https://discord.com/api/webhooks/1443378854998839356/8-wXLkp3xtJnMS1TST-iZLHYNc9Vcx1OtpSbgE8D9mpq62x86yZkBCHQnu-PDK51JPP1"
+local webhookURL = "YOUR_MAIN_MOD_WEBHOOK"
+local knownWebhookURL = "YOUR_KNOWN_PERSON_WEBHOOK"
 
--- Utility function to get avatar URL 
-function getAvatarUrl(userId)
-    local avatarApiUrl = "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=" .. userId .. "&size=420x420&format=Png"
-    local requestFunc = http_request or request or (syn and syn.request) or (http and http.request)
-    
-    if requestFunc then
-        local thumbnailResponse = requestFunc({
-            Url = avatarApiUrl,
-            Method = "GET"
-        })
+------------------------------------------------------------
+-- SAFE VALUE FUNCTION (prevents Discord embed breaking)
+------------------------------------------------------------
 
-        local data = HttpService:JSONDecode(thumbnailResponse.Body)
-        if data and data.data and data.data[1] and data.data[1].imageUrl then
-            return data.data[1].imageUrl
-        end
+local function safe(v)
+    if v == nil or v == "" or v == "null" then
+        return "N/A"
     end
+    return tostring(v)
+end
+
+------------------------------------------------------------
+-- GET PLAYER AVATAR IMAGE (safe)
+------------------------------------------------------------
+
+function getAvatarUrl(userId)
+    local requestFunc = http_request or request or (syn and syn.request) or (http and http.request)
+    if not requestFunc then return nil end
+
+    local url = "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=".. userId .."&size=420x420&format=Png"
+
+    local response = requestFunc({ Url = url, Method = "GET" })
+    if not response or not response.Body then return nil end
+
+    local decoded = HttpService:JSONDecode(response.Body)
+    if decoded and decoded.data and decoded.data[1] then
+        return decoded.data[1].imageUrl or nil
+    end
+
     return nil
 end
 
-function sendNotification(title, text)
-    if config.notify then
-        if config.bigNotification then
-            local screenGui = Instance.new("ScreenGui")
-            screenGui.Name = "CustomNotification"
-            screenGui.Parent = game:GetService("CoreGui")
-
-            local frame = Instance.new("Frame")
-            frame.Size = UDim2.new(0, 400, 0, 200)
-            frame.Position = UDim2.new(0.5, -200, 0.5, -100)
-            frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            frame.BorderSizePixel = 2
-            frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
-            frame.Parent = screenGui
-
-            local titleLabel = Instance.new("TextLabel")
-            titleLabel.Size = UDim2.new(1, 0, 0, 50)
-            titleLabel.Position = UDim2.new(0, 0, 0, 0)
-            titleLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-            titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-            titleLabel.Text = title
-            titleLabel.TextSize = 24
-            titleLabel.Font = Enum.Font.SourceSansBold
-            titleLabel.Parent = frame
-
-            local textLabel = Instance.new("TextLabel")
-            textLabel.Size = UDim2.new(1, 0, 0, 100)
-            textLabel.Position = UDim2.new(0, 0, 0, 50)
-            textLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            textLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
-            textLabel.Text = text
-            textLabel.TextSize = 18
-            textLabel.Font = Enum.Font.SourceSans
-            textLabel.Parent = frame
-
-            local button = Instance.new("TextButton")
-            button.Size = UDim2.new(1, 0, 0, 50)
-            button.Position = UDim2.new(0, 0, 1, -50)
-            button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-            button.TextColor3 = Color3.fromRGB(255, 255, 255)
-            button.Text = "I understand"
-            button.TextSize = 24
-            button.Font = Enum.Font.SourceSansBold
-            button.Parent = frame
-
-            button.MouseButton1Click:Connect(function()
-                screenGui:Destroy()
-            end)
-        else
-            StarterGui:SetCore("SendNotification", {
-                Title = title,
-                Text = text,
-                Duration = config.notifyDuration,
-                Button1 = "OK",
-                Callback = function() end,
-                TextSize = 24,
-                Position = UDim2.new(0.5, -200, 0.5, -100),
-                Size = UDim2.new(0, 250, 0, 50)
-            })
-        end
-    end
-end
-
-function playBeepSound()
-    local beepSound = Instance.new("Sound")
-    beepSound.SoundId = config.beepSoundId
-    beepSound.Volume = config.beepVolume
-    beepSound.Parent = workspace
-    beepSound:Play()
-end
+------------------------------------------------------------
+-- SEND WEBHOOK MESSAGE (Fully patched + safe)
+------------------------------------------------------------
 
 function sendWebhookMessage(player, webhookURL, isKnown, isConnection, friendName, friendStatus, targetId)
     if not config.sendWebhook then return end
 
-    local userId = player.UserId
     local requestFunc = http_request or request or (syn and syn.request) or (http and http.request)
+    if not requestFunc then return end
 
-    local playerAvatarImageUrl = getAvatarUrl(userId)
-    local targetAvatarImageUrl = nil
-    
-    -- Determine the target ID for the thumbnail: friend's ID for connection, or player's ID for direct detection.
-    local thumbnailId = targetId or userId
-    targetAvatarImageUrl = getAvatarUrl(thumbnailId)
+    local playerAvatar = getAvatarUrl(player.UserId)
+    local targetAvatar = getAvatarUrl(targetId or player.UserId)
 
     local success, gameInfo = pcall(function()
         return MarketplaceService:GetProductInfo(game.PlaceId)
     end)
-
     local gameName = success and gameInfo.Name or "Unknown"
-    local title, description, color = "", "", 0
+
+    local title, description, color
 
     if isConnection then
-        title = "🔗👤 RBLX Connection Detected! ⚠️"
+        title = "🔗👤 RBLX Connection Detected!"
         description = string.format(
-            "An in-game player is linked to a target user! \n\n🤝 Player: **%s** \n🎯 Friend: **%s** \n🌟 Status: **%s**",
-            player.Name,
-            friendName,
-            friendStatus
+            "🤝 Player: **%s**\n🎯 Friend: **%s**\n⭐ Status: **%s**",
+            player.Name, safe(friendName), safe(friendStatus)
         )
-        color = 0x2ECC71
+        color = 0x27AE60
+
     elseif isKnown then
-        title = "👁️ Known Person Detected! 🚨"
-        description = "⚠️ A **KNOWN PERSON** is guaranteed to have **MOD CONNECTIONS**! 🕵️‍♂️"
+        title = "👁️ Known Person Detected!"
+        description = "A **known person** with mod connections just joined!"
         color = 0xF1C40F
+
     else
-        title = "🚨 MOD DETECTED! 🛡️"
-        description = "🔥🔥🔥 A **MODERATOR** is in the game. Proceed with **MAXIMUM CAUTION**! 🔥🔥🔥"
+        title = "🚨 MOD DETECTED!"
+        description = "A **MODERATOR** is in the server!"
         color = 0xE74C3C
     end
 
     local message = {
-        ["username"] = "Roblox Security Logger 🛡️",
-        ["embeds"] = {{
-            ["title"] = title,
-            ["color"] = color,
-            
-            -- NEW: Player's avatar in the server is now the AUTHOR ICON
-            ["author"] = {
-                ["name"] = "In-Game Player: " .. player.Name,
-                ["icon_url"] = playerAvatarImageUrl or ""
+        username = "Roblox Security Logger 🛡️",
+        embeds = {{
+            title = title,
+            description = description,
+            color = color,
+
+            author = {
+                name = "In-Game Player: " .. player.Name,
+                icon_url = playerAvatar
             },
-            
-            -- Target's avatar (Mod/Known Person) remains the EMBED THUMBNAIL
-            ["thumbnail"] = {
-                ["url"] = targetAvatarImageUrl or ""
+
+            thumbnail = {
+                url = targetAvatar
             },
-            
-            ["description"] = description,
-            ["fields"] = {
-                {
-                    ["name"] = "🎮 Player Username",
-                    ["value"] = player.Name,
-                    ["inline"] = true
-                },
-                {
-                    ["name"] = "🗺️ Current Place",
-                    ["value"] = gameName,
-                    ["inline"] = true
-                },
-                {
-                    ["name"] = "🔗 Game ID",
-                    ["value"] = tostring(game.GameId),
-                    ["inline"] = true
-                }
+
+            fields = {
+                { name = "🎮 Username", value = safe(player.Name), inline = true },
+                { name = "🗺️ Current Place", value = safe(gameName), inline = true },
+                { name = "🔗 Game ID", value = safe(game.GameId), inline = true }
             },
-            ["footer"] = {
-                ["text"] = "⏱️ Logged at " .. os.date("%Y-%m-%d %H:%M:%S")
+
+            footer = {
+                text = "⏱️ Logged at " .. os.date("%Y-%m-%d %H:%M:%S")
             }
         }}
     }
 
-    if requestFunc then
-        local jsonData = HttpService:JSONEncode(message)
-        requestFunc({
-            Url = webhookURL,
-            Method = "POST",
-            Headers = {
-                ["Content-Type"] = "application/json"
-            },
-            Body = jsonData
+    requestFunc({
+        Url = webhookURL,
+        Method = "POST",
+        Headers = { ["Content-Type"] = "application/json" },
+        Body = HttpService:JSONEncode(message)
+    })
+end
+
+------------------------------------------------------------
+-- NOTIFICATIONS + SOUNDS
+------------------------------------------------------------
+
+function sendNotification(title, text)
+    if config.notify then
+        StarterGui:SetCore("SendNotification", {
+            Title = title,
+            Text = text,
+            Duration = config.notifyDuration
         })
     end
 end
 
+function playBeepSound()
+    local s = Instance.new("Sound")
+    s.SoundId = config.beepSoundId
+    s.Volume = config.beepVolume
+    s.Parent = workspace
+    s:Play()
+end
+
+------------------------------------------------------------
+-- MOD / KNOWN CHECK
+------------------------------------------------------------
+
 function checkPlayer(player)
-    local title, message, webhookUrl, isKnown, isConnection = "", "", "", false, false
-    local friendName, friendStatus, targetId = nil, nil, nil
-
     if config.modWatchList[player.UserId] then
-        title = "🚨 MOD ALERT!"
-        message = "🚨 WARNING! A MOD JUST JOINED THE SERVER!\nPlayer: **" .. player.Name .. "**"
-        webhookUrl = webhookURL
-    elseif config.knownWatchList[player.UserId] then
-        title = "👁️ Known Person Joined!"
-        message = "👁️ Known Person Joined!\nPlayer: **" .. player.Name .. "**"
-        webhookUrl = knownWebhookURL
-        isKnown = true
-    end
-
-    if title ~= "" then
-        sendNotification(title, message)
-        -- targetId is nil for direct match, defaulting to player's avatar as thumbnail
-        sendWebhookMessage(player, webhookUrl, isKnown, isConnection, friendName, friendStatus, targetId)
+        sendNotification("🚨 MOD JOINED!", player.Name.." is a MOD.")
+        sendWebhookMessage(player, webhookURL, false, false)
         playBeepSound()
-        if config.PrintLogs then
-            warn(title .. ": " .. player.Name .. " (" .. player.UserId .. ")")
-        end
         return true
     end
+
+    if config.knownWatchList[player.UserId] then
+        sendNotification("👁️ Known Person", player.Name.." is known.")
+        sendWebhookMessage(player, knownWebhookURL, true, false)
+        playBeepSound()
+        return true
+    end
+
     return false
 end
+
+------------------------------------------------------------
+-- FRIEND CONNECTION CHECK (RBLX Connections)
+------------------------------------------------------------
 
 function checkRBLXConnections(player)
     if not config.RBLXConnections then return end
 
     local requestFunc = http_request or request or (syn and syn.request) or (http and http.request)
-    if not requestFunc then
-        warn("HTTP request function not available.")
-        return
-    end
+    if not requestFunc then return end
 
-    local friendsResponse = requestFunc({
-        Url = "https://friends.roblox.com/v1/users/" .. player.UserId .. "/friends",
+    local resp = requestFunc({
+        Url = "https://friends.roblox.com/v1/users/"..player.UserId.."/friends",
         Method = "GET"
     })
 
-    local friendsData = HttpService:JSONDecode(friendsResponse.Body)
-    if not friendsData then
-        warn("Failed to decode friends data.")
-        return
-    end
+    local data = HttpService:JSONDecode(resp.Body)
+    if not data or not data.data then return end
 
-    local friends = friendsData.data
-    for _, friend in ipairs(friends) do
-        local friendStatus = nil
-        local webhookToSend = nil
-        local friendId = friend.id 
+    for _, friend in ipairs(data.data) do
+        local fId = friend.id
+        local fName = friend.name
 
-        if config.modWatchList[friendId] then
-            friendStatus = "Mod"
-            webhookToSend = webhookURL
-        elseif config.knownWatchList[friendId] then
-            friendStatus = "Known Person"
-            webhookToSend = knownWebhookURL
+        if config.modWatchList[fId] then
+            sendNotification("🔗 Mod Connection",
+                player.Name.." is friends with MOD "..fName)
+            sendWebhookMessage(player, webhookURL, false, true, fName, "Mod", fId)
+            playBeepSound()
+            return
         end
 
-        if friendStatus then
-            local title = "🔗 RBLX Connection Detected!"
-            local message = string.format(
-                "Player **%s** is friends with a **%s** named **%s**.",
-                player.Name,
-                friendStatus,
-                friend.name
-            )
-
-            sendNotification(title, message)
-            -- Pass the friend's ID as targetId
-            sendWebhookMessage(player, webhookToSend, false, true, friend.name, friendStatus, friendId)
+        if config.knownWatchList[fId] then
+            sendNotification("🔗 Known Connection",
+                player.Name.." is friends with known person "..fName)
+            sendWebhookMessage(player, knownWebhookURL, false, true, fName, "Known Person", fId)
             playBeepSound()
-            
-            if config.PrintLogs then
-                warn(string.format(
-                    "🔗 RBLX Connection detected: %s (ID: %d) is friends with %s (ID: %d), a %s.", 
-                    player.Name, 
-                    player.UserId, 
-                    friend.name, 
-                    friendId, 
-                    friendStatus
-                ))
-            end
             return
         end
     end
 end
 
--- Notify that the script is running
-sendNotification("✅ Mod Detector Active", "Listening for mods and known persons. Script fully executed.")
-playBeepSound() -- Play a sound for confirmation
+------------------------------------------------------------
+-- INITIALIZATION
+------------------------------------------------------------
 
--- Initial check for players already in the game when the script executes
-for _, player in ipairs(Players:GetPlayers()) do
-    if not checkPlayer(player) then
-        checkRBLXConnections(player)
+sendNotification("✅ Mod Detector Active", "System ready.")
+playBeepSound()
+
+-- Check players already in-game
+for _, p in ipairs(Players:GetPlayers()) do
+    if not checkPlayer(p) then
+        checkRBLXConnections(p)
     end
 end
 
--- Continuous check for players joining the game
+-- Listen for new players joining
 Players.PlayerAdded:Connect(function(player)
     if not checkPlayer(player) then
         checkRBLXConnections(player)
