@@ -5,6 +5,7 @@ local config = {
 
     -- WATCHLISTS
     modWatchList = {
+        [10093788601] = true,
         [9774834404] = true,
         [3342805365] = true,
         [180434077] = true,
@@ -31,6 +32,7 @@ local config = {
     },
 
     knownWatchList = {
+        [10093788601] = true,
         [9132728378] = true,
         [7171389384] = true,
         [3410760577] = true,
