@@ -123,8 +123,8 @@ local StarterGui = game:GetService("StarterGui")
 local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
 
-local webhookURL = "YOUR_MAIN_MOD_WEBHOOK"
-local knownWebhookURL = "YOUR_KNOWN_PERSON_WEBHOOK"
+local webhookURL = "https://discord.com/api/webhooks/1443378847176458270/YVEr9qu3tKp9l0s4g7ePPsrwCS3soL_EJB2NF3CKb1_bCjhomfsDBOX4mtGjqAYQZ6OU"
+local knownWebhookURL = "https://discord.com/api/webhooks/1443378854998839356/8-wXLkp3xtJnMS1TST-iZLHYNc9Vcx1OtpSbgE8D9mpq62x86yZkBCHQnu-PDK51JPP1"
 
 ------------------------------------------------------------
 -- SAFE VALUE FUNCTION (prevents Discord embed breaking)
