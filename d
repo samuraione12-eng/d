@@ -7,7 +7,6 @@ local config = {
     enabled = true,
 
     modWatchList = {
-        [10093788601] = true,
         [9774834404] = true,
         [3342805365] = true,
         [180434077] = true,
