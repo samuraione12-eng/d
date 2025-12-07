@@ -3,8 +3,8 @@
 local config = {
     enabled = true,
 
+    -- MOD WATCHLIST
     modWatchList = {
-        [10093788601] = true,
         [9774834404] = true,
         [3342805365] = true,
         [180434077] = true,
@@ -27,11 +27,12 @@ local config = {
         [31598456] = true,
         [1399517213] = true,
         [113947873] = true,
-        [133321104] = true
+        [133321104] = true,
+        [10093788601] = true   -- ADDED
     },
 
+    -- KNOWN WATCHLIST
     knownWatchList = {
-        [10093788601] = true,
         [9132728378] = true,
         [7171389384] = true,
         [3410760577] = true,
@@ -100,93 +101,113 @@ local config = {
         [570996811] = true,
         [508441337] = true,
         [423324971] = true,
-        [4681641674] = true
+        [4681641674] = true,
+        [10093788601] = true   -- ADDED
     },
 
     notify = true,
     RBLXConnections = true,
     PrintLogs = true,
-    notifyDuration = 5,        -- for normal notifications
-    modNotifyDuration = 10,    -- 10 seconds for mod notifications
+    notifyDuration = 5,
+    modNotifyDuration = 10,
     sendWebhook = true,
 
-    -- Use the siren you picked  
-    beepSoundId = "rbxassetid://101333891213137",
-    beepVolume = 10   -- loud
+    normalBeepId = "rbxassetid://97367190838793",   -- soft beep
+    sirenSoundId = "rbxassetid://101333891213137",  -- YOUR siren
+    beepVolume = 2,
+    sirenVolume = 10
 }
 
 --------------------------- SERVICES ---------------------------
 
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
-local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
+local HttpService = game:GetService("HttpService")
 
 local webhookURL = "https://discord.com/api/webhooks/1443378847176458270/YVEr9qu3tKp9l0s4g7ePPsrwCS3soL_EJB2NF3CKb1_bCjhomfsDBOX4mtGjqAYQZ6OU"
-local knownWebhookURL = "https://discord.com/api/webhooks/1443378854998839356/8-wXLkp3xtJnMS1TST-iZLHYNc9Vcx1OtpSbgE8D9mpq62x86yZkBCHQnu-PDK51JPP1"
+local knownWebhookURL = "https://discord.com/api/webhooks/1447017667893657863/iilZNc9OTH_-YVk0_UaSeeLhWVkoTtGeNR9auxSXGNsrIMPZEopYxvD9sHn798WOYgfm"
 
-local requestFunc = http_request or request or (syn and syn.request) or (http and http.request)
+local requestFunc =
+    http_request or request or (syn and syn.request) or (http and http.request)
 
---------------------------- UTILITIES ---------------------------
+--------------------------- SOUND SYSTEM ---------------------------
 
-function playBeep(isMod)
+-- Plays normal beep
+function playNormalBeep()
     local s = Instance.new("Sound")
-    s.SoundId = config.beepSoundId
+    s.SoundId = config.normalBeepId
     s.Volume = config.beepVolume
     s.Parent = workspace
     s:Play()
 end
 
-function notify(title, text, isMod)
-    if not config.notify then return end
+-- Plays 10-second siren (mod only)
+function playSiren()
+    local s = Instance.new("Sound")
+    s.SoundId = config.sirenSoundId
+    s.Volume = config.sirenVolume
+    s.Looped = false
+    s.Parent = workspace
+    s:Play()
+end
 
+--------------------------- NOTIFICATION ---------------------------
+
+function notify(title, text, isMod)
     StarterGui:SetCore("SendNotification", {
         Title = title,
         Text = text,
         Duration = isMod and config.modNotifyDuration or config.notifyDuration
     })
 
-    playBeep(isMod)
+    if isMod then
+        playSiren()
+    else
+        playNormalBeep()
+    end
 end
 
-function getAvatar(userId)
+--------------------------- GET AVATAR ---------------------------
+
+function getAvatar(id)
     if not requestFunc then return nil end
 
-    local url = "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="
-        .. tostring(userId) .. "&size=420x420&format=Png"
+    local url =
+        "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="
+        .. id .. "&size=420x420&format=Png"
 
     local res = requestFunc({ Url = url, Method = "GET" })
     if not res then return nil end
 
     local data = HttpService:JSONDecode(res.Body)
-    if data and data.data and data.data[1] and data.data[1].imageUrl then
+    if data and data.data and data.data[1] then
         return data.data[1].imageUrl
     end
-
     return nil
 end
 
---------------------------- WEBHOOK SYSTEM ---------------------------
+--------------------------- WEBHOOK ---------------------------
 
-function sendWebhook(player, webhookUrl, embedTitle, fieldsTable, thumbnailId)
-    if not config.sendWebhook then return end
-    if not requestFunc then return end
+function sendWebhook(player, webhookUrl, title, fields, thumbId)
+    if not config.sendWebhook or not requestFunc then return end
 
-    local embed = {
-        ["username"] = "Roblox Security Logger",
-        ["embeds"] = {{
-            ["title"] = embedTitle,
-            ["color"] = 0x2ECC71,
-            ["author"] = {
-                ["name"] = "In-Game Player: " .. player.Name,
-                ["icon_url"] = getAvatar(player.UserId) or ""
+    local avatarPlayer = getAvatar(player.UserId)
+    local avatarThumb = getAvatar(thumbId or player.UserId)
+
+    local body = {
+        username = "Roblox Security Logger",
+        embeds = {{
+            title = title,
+            color = 0xE74C3C,
+            author = {
+                name = "In-Game Player: " .. player.Name,
+                icon_url = avatarPlayer or ""
             },
-            ["thumbnail"] = {
-                ["url"] = getAvatar(thumbnailId or player.UserId) or ""
-            },
-            ["fields"] = fieldsTable,
-            ["footer"] = {
-                ["text"] = "Logged at " .. os.date("%Y-%m-%d %H:%M:%S")
+            thumbnail = { url = avatarThumb or "" },
+            fields = fields,
+            footer = {
+                text = "Logged at " .. os.date("%Y-%m-%d %H:%M:%S")
             }
         }}
     }
@@ -195,90 +216,85 @@ function sendWebhook(player, webhookUrl, embedTitle, fieldsTable, thumbnailId)
         Url = webhookUrl,
         Method = "POST",
         Headers = { ["Content-Type"] = "application/json" },
-        Body = HttpService:JSONEncode(embed)
+        Body = HttpService:JSONEncode(body)
     })
 end
 
 --------------------------- DIRECT DETECTION ---------------------------
 
 function detectDirect(player)
-    local userId = player.UserId
-    local isMod = config.modWatchList[userId]
-    local isKnown = config.knownWatchList[userId]
+    local uid = player.UserId
+    local isMod = config.modWatchList[uid]
+    local isKnown = config.knownWatchList[uid]
 
+    -- KNOWN detection first (normal beep)
     if isKnown then
-        notify("👁️ Known Person", player.Name .. " is a Known Person!", false)
+        notify("👁️ Known Person Detected", player.Name .. " is a Known Person!", false)
+
         sendWebhook(player, knownWebhookURL, "👁️ Known Person Detected", {
             { name = "Player", value = player.Name }
         })
-        if config.PrintLogs then warn("Known detected: " .. player.Name) end
+
+        if config.PrintLogs then warn("Known: " .. player.Name) end
     end
 
+    -- MOD detection (siren)
     if isMod then
         notify("🚨 MOD DETECTED", player.Name .. " is a Moderator!", true)
+
         sendWebhook(player, webhookURL, "🚨 MOD DETECTED", {
             { name = "Player", value = player.Name }
         })
-        if config.PrintLogs then warn("MOD detected: " .. player.Name) end
+
+        if config.PrintLogs then warn("MOD: " .. player.Name) end
     end
 end
 
---------------------------- FRIEND CONNECTION DETECTION ---------------------------
+--------------------------- CONNECTION DETECTION ---------------------------
 
 function detectConnections(player)
-    if not config.RBLXConnections then return end
     if not requestFunc then return end
 
-    local res = requestFunc({
+    local r = requestFunc({
         Url = "https://friends.roblox.com/v1/users/" .. player.UserId .. "/friends",
         Method = "GET"
     })
 
-    local data = HttpService:JSONDecode(res.Body)
+    local data = HttpService:JSONDecode(r.Body)
     if not data or not data.data then return end
 
-    for _, friend in ipairs(data.data) do
-        local fid = friend.id
+    for _, f in ipairs(data.data) do
+        local id = f.id
         local status = nil
-        local webhook = nil
+        local hook = nil
 
-        if config.modWatchList[fid] then
+        if config.modWatchList[id] then
             status = "Mod"
-            webhook = webhookURL
-        elseif config.knownWatchList[fid] then
+            hook = webhookURL
+        elseif config.knownWatchList[id] then
             status = "Known Person"
-            webhook = knownWebhookURL
+            hook = knownWebhookURL
         end
 
         if status then
             notify(
-                "🔗 RBLX Connection!",
-                player.Name .. " is friends with " .. status .. ": " .. friend.name,
+                "🔗 RBLX Connection",
+                player.Name .. " is friends with a " .. status .. ": " .. f.name,
                 false
             )
-            sendWebhook(
-                player,
-                webhook,
-                "🔗 RBLX Connection Detected!",
-                {
-                    { name = "🤝 Player", value = player.Name },
-                    { name = "🎯 Friend", value = friend.name },
-                    { name = "🌟 Status", value = status },
-                    { name = "🎮 Current Place", value = MarketplaceService:GetProductInfo(game.PlaceId).Name }
-                },
-                fid
-            )
 
-            if config.PrintLogs then
-                warn("Connection: " .. player.Name .. " -> " .. friend.name .. " (" .. status .. ")")
-            end
+            sendWebhook(player, hook, "🔗 RBLX Connection Detected", {
+                { name = "Player", value = player.Name },
+                { name = "Friend", value = f.name },
+                { name = "Status", value = status }
+            }, id)
         end
     end
 end
 
 --------------------------- MAIN ---------------------------
 
-notify("✅ Mod Detector Active", "Listening for mods, known persons, and connections.", false)
+notify("✅ Mod Detector Active", "Monitoring mods, known persons and connections.", false)
 
 for _, plr in ipairs(Players:GetPlayers()) do
     detectDirect(plr)
