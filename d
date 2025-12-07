@@ -107,11 +107,13 @@ local config = {
     notify = true,
     RBLXConnections = true,
     PrintLogs = true,
-    notifyDuration = 5,
+    notifyDuration = 5, -- Default for non-mod
+    modNotifyDuration = 10, -- 10 seconds for mod
     sendWebhook = true,
 
     beepSoundId = "rbxassetid://97367190838793",
-    beepVolume = 3
+    beepVolume = 3,
+    modBeepVolume = 10 -- loud volume for mod
 }
 
 --------------------------- SERVICES ---------------------------
@@ -121,7 +123,6 @@ local StarterGui = game:GetService("StarterGui")
 local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
 
--- YOUR actual webhooks
 local webhookURL = "https://discord.com/api/webhooks/1443378847176458270/YVEr9qu3tKp9l0s4g7ePPsrwCS3soL_EJB2NF3CKb1_bCjhomfsDBOX4mtGjqAYQZ6OU"
 local knownWebhookURL = "https://discord.com/api/webhooks/1443378854998839356/8-wXLkp3xtJnMS1TST-iZLHYNc9Vcx1OtpSbgE8D9mpq62x86yZkBCHQnu-PDK51JPP1"
 
@@ -129,24 +130,24 @@ local requestFunc = http_request or request or (syn and syn.request) or (http an
 
 --------------------------- UTILITIES ---------------------------
 
-function playBeepSound()
+function playBeep(loud)
     local s = Instance.new("Sound")
     s.SoundId = config.beepSoundId
-    s.Volume = config.beepVolume
+    s.Volume = loud and config.modBeepVolume or config.beepVolume
     s.Parent = workspace
     s:Play()
 end
 
-function notify(title, text)
+function notify(title, text, isMod)
     if not config.notify then return end
 
     StarterGui:SetCore("SendNotification", {
         Title = title,
         Text = text,
-        Duration = config.notifyDuration
+        Duration = isMod and config.modNotifyDuration or config.notifyDuration
     })
 
-    playBeepSound()
+    playBeep(isMod)
 end
 
 function getAvatar(userId)
@@ -178,18 +179,14 @@ function sendWebhook(player, webhookUrl, embedTitle, fieldsTable, thumbnailId)
         ["embeds"] = {{
             ["title"] = embedTitle,
             ["color"] = 0x2ECC71,
-
             ["author"] = {
                 ["name"] = "In-Game Player: " .. player.Name,
                 ["icon_url"] = getAvatar(player.UserId) or ""
             },
-
             ["thumbnail"] = {
                 ["url"] = getAvatar(thumbnailId or player.UserId) or ""
             },
-
             ["fields"] = fieldsTable,
-
             ["footer"] = {
                 ["text"] = "Logged at " .. os.date("%Y-%m-%d %H:%M:%S")
             }
@@ -212,24 +209,14 @@ function detectDirect(player)
     local isKnown = config.knownWatchList[userId]
 
     if isMod then
-        notify("🚨 MOD DETECTED", player.Name .. " is a Moderator!")
-        sendWebhook(
-            player,
-            webhookURL,
-            "🚨 MOD DETECTED",
-            { { name = "Player", value = player.Name } }
-        )
+        notify("🚨 MOD DETECTED", player.Name .. " is a Moderator!", true)
+        sendWebhook(player, webhookURL, "🚨 MOD DETECTED", { { name = "Player", value = player.Name } })
         if config.PrintLogs then warn("MOD detected: " .. player.Name) end
     end
 
     if isKnown then
-        notify("👁️ Known Person", player.Name .. " is a Known Person!")
-        sendWebhook(
-            player,
-            knownWebhookURL,
-            "👁️ Known Person Detected",
-            { { name = "Player", value = player.Name } }
-        )
+        notify("👁️ Known Person", player.Name .. " is a Known Person!", false)
+        sendWebhook(player, knownWebhookURL, "👁️ Known Person Detected", { { name = "Player", value = player.Name } })
         if config.PrintLogs then warn("Known detected: " .. player.Name) end
     end
 end
@@ -262,23 +249,13 @@ function detectConnections(player)
         end
 
         if status then
-            notify(
-                "🔗 RBLX Connection!",
-                player.Name .. " is friends with " .. status .. ": " .. friend.name
-            )
-
-            sendWebhook(
-                player,
-                webhook,
-                "🔗 RBLX Connection Detected!",
-                {
-                    { name = "🤝 Player", value = player.Name },
-                    { name = "🎯 Friend", value = friend.name },
-                    { name = "🌟 Status", value = status },
-                    { name = "🎮 Current Place", value = MarketplaceService:GetProductInfo(game.PlaceId).Name }
-                },
-                fid
-            )
+            notify("🔗 RBLX Connection!", player.Name .. " is friends with " .. status .. ": " .. friend.name, false)
+            sendWebhook(player, webhook, "🔗 RBLX Connection Detected!", {
+                { name = "🤝 Player", value = player.Name },
+                { name = "🎯 Friend", value = friend.name },
+                { name = "🌟 Status", value = status },
+                { name = "🎮 Current Place", value = MarketplaceService:GetProductInfo(game.PlaceId).Name }
+            }, fid)
 
             if config.PrintLogs then
                 warn("Connection: " .. player.Name .. " -> " .. friend.name .. " (" .. status .. ")")
@@ -289,7 +266,7 @@ end
 
 --------------------------- MAIN ---------------------------
 
-notify("✅ Mod Detector Active", "Listening for mods, known people, and connections.")
+notify("✅ Mod Detector Active", "Listening for mods, known people, and connections.", false)
 
 for _, plr in ipairs(Players:GetPlayers()) do
     detectDirect(plr)
