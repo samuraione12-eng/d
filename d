@@ -3,9 +3,7 @@
 local config = {
     enabled = true,
 
-    -- WATCHLISTS
     modWatchList = {
-        [10093788601] = true,
         [9774834404] = true,
         [3342805365] = true,
         [180434077] = true,
@@ -32,7 +30,6 @@ local config = {
     },
 
     knownWatchList = {
-        [10093788601] = true,
         [9132728378] = true,
         [7171389384] = true,
         [3410760577] = true,
@@ -107,13 +104,13 @@ local config = {
     notify = true,
     RBLXConnections = true,
     PrintLogs = true,
-    notifyDuration = 5, -- Default for non-mod
-    modNotifyDuration = 10, -- 10 seconds for mod
+    notifyDuration = 5,        -- for normal notifications
+    modNotifyDuration = 10,    -- 10 seconds for mod notifications
     sendWebhook = true,
 
-    beepSoundId = "rbxassetid://97367190838793",
-    beepVolume = 3,
-    modBeepVolume = 10 -- loud volume for mod
+    -- Use the siren you picked  
+    beepSoundId = "rbxassetid://101333891213137",
+    beepVolume = 10   -- loud
 }
 
 --------------------------- SERVICES ---------------------------
@@ -130,10 +127,10 @@ local requestFunc = http_request or request or (syn and syn.request) or (http an
 
 --------------------------- UTILITIES ---------------------------
 
-function playBeep(loud)
+function playBeep(isMod)
     local s = Instance.new("Sound")
     s.SoundId = config.beepSoundId
-    s.Volume = loud and config.modBeepVolume or config.beepVolume
+    s.Volume = config.beepVolume
     s.Parent = workspace
     s:Play()
 end
@@ -160,7 +157,6 @@ function getAvatar(userId)
     if not res then return nil end
 
     local data = HttpService:JSONDecode(res.Body)
-
     if data and data.data and data.data[1] and data.data[1].imageUrl then
         return data.data[1].imageUrl
     end
@@ -208,16 +204,20 @@ function detectDirect(player)
     local isMod = config.modWatchList[userId]
     local isKnown = config.knownWatchList[userId]
 
-    if isMod then
-        notify("🚨 MOD DETECTED", player.Name .. " is a Moderator!", true)
-        sendWebhook(player, webhookURL, "🚨 MOD DETECTED", { { name = "Player", value = player.Name } })
-        if config.PrintLogs then warn("MOD detected: " .. player.Name) end
-    end
-
     if isKnown then
         notify("👁️ Known Person", player.Name .. " is a Known Person!", false)
-        sendWebhook(player, knownWebhookURL, "👁️ Known Person Detected", { { name = "Player", value = player.Name } })
+        sendWebhook(player, knownWebhookURL, "👁️ Known Person Detected", {
+            { name = "Player", value = player.Name }
+        })
         if config.PrintLogs then warn("Known detected: " .. player.Name) end
+    end
+
+    if isMod then
+        notify("🚨 MOD DETECTED", player.Name .. " is a Moderator!", true)
+        sendWebhook(player, webhookURL, "🚨 MOD DETECTED", {
+            { name = "Player", value = player.Name }
+        })
+        if config.PrintLogs then warn("MOD detected: " .. player.Name) end
     end
 end
 
@@ -249,13 +249,23 @@ function detectConnections(player)
         end
 
         if status then
-            notify("🔗 RBLX Connection!", player.Name .. " is friends with " .. status .. ": " .. friend.name, false)
-            sendWebhook(player, webhook, "🔗 RBLX Connection Detected!", {
-                { name = "🤝 Player", value = player.Name },
-                { name = "🎯 Friend", value = friend.name },
-                { name = "🌟 Status", value = status },
-                { name = "🎮 Current Place", value = MarketplaceService:GetProductInfo(game.PlaceId).Name }
-            }, fid)
+            notify(
+                "🔗 RBLX Connection!",
+                player.Name .. " is friends with " .. status .. ": " .. friend.name,
+                false
+            )
+            sendWebhook(
+                player,
+                webhook,
+                "🔗 RBLX Connection Detected!",
+                {
+                    { name = "🤝 Player", value = player.Name },
+                    { name = "🎯 Friend", value = friend.name },
+                    { name = "🌟 Status", value = status },
+                    { name = "🎮 Current Place", value = MarketplaceService:GetProductInfo(game.PlaceId).Name }
+                },
+                fid
+            )
 
             if config.PrintLogs then
                 warn("Connection: " .. player.Name .. " -> " .. friend.name .. " (" .. status .. ")")
@@ -266,7 +276,7 @@ end
 
 --------------------------- MAIN ---------------------------
 
-notify("✅ Mod Detector Active", "Listening for mods, known people, and connections.", false)
+notify("✅ Mod Detector Active", "Listening for mods, known persons, and connections.", false)
 
 for _, plr in ipairs(Players:GetPlayers()) do
     detectDirect(plr)
