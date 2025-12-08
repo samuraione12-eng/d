@@ -39,7 +39,69 @@ local config = {
         [2722548028] = true,
         [3038813476] = true,
         [1676897355] = true,
-        -- (your other IDs...) --
+        [1212564846] = true,
+        [1170157879] = true,
+        [817372683] = true,
+        [976048069] = true,
+        [20576250] = true,
+        [324386852] = true,
+        [1699080206] = true,
+        [4761042954] = true,
+        [716661842] = true,
+        [1952198604] = true,
+        [3960908652] = true,
+        [5041464410] = true,
+        [719253194] = true,
+        [72777686] = true,
+        [93396927] = true,
+        [1570344799] = true,
+        [2715139893] = true,
+        [2592044281] = true,
+        [7509170326] = true,
+        [3168035361] = true,
+        [299656551] = true,
+        [7114434816] = true,
+        [2398965451] = true,
+        [8876776576] = true,
+        [8854090897] = true,
+        [2589526320] = true,
+        [904064295] = true,
+        [1347365278] = true,
+        [1197113640] = true,
+        [711164374] = true,
+        [167011353] = true,
+        [4045652628] = true,
+        [835918816] = true,
+        [1634295899] = true,
+        [484209710] = true,
+        [1046882754] = true,
+        [301707243] = true,
+        [4814045937] = true,
+        [192648256] = true,
+        [4979329484] = true,
+        [18394211] = true,
+        [2627770086] = true,
+        [1283600369] = true,
+        [988801608] = true,
+        [5499975764] = true,
+        [7519940219] = true,
+        [5441022436] = true,
+        [33916776] = true,
+        [590056862] = true,
+        [3410760577] = true,
+        [1596012708] = true,
+        [1503659477] = true,
+        [160222694] = true,
+        [72777686] = true,
+        [538421707] = true,
+        [174371231] = true,
+        [158782923] = true,
+        [1366392507] = true,
+        [4701284318] = true,
+        [570996811] = true,
+        [508441337] = true,
+        [423324971] = true,
+        [4681641674] = true,
         [10093788601] = true
     },
 
@@ -62,8 +124,8 @@ local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
 local HttpService = game:GetService("HttpService")
 
-local webhookURL = "YOUR_MOD_WEBHOOK"
-local knownWebhookURL = "YOUR_KNOWN_WEBHOOK"
+local webhookURL = "https://discord.com/api/webhooks/1447387183571800065/noPXyO97Zr4m6a3XbhnxwOAkn0WMOvcG88foOXWNcOrZeCckUMyCyQzIuNNOwm26czn4"
+local knownWebhookURL = "https://discord.com/api/webhooks/1447387193650970747/LGI1sJjS9mggI_dcjaLiC901eoT0kw946GEN93QTIAvCuuJMEPK5Mx9IT1VIVxozD0ek"
 
 local requestFunc =
     http_request or request or (syn and syn.request) or (http and http.request)
@@ -101,7 +163,8 @@ end
 
 function getAvatar(id)
     if not requestFunc then return nil end
-    local url = "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="
+    local url =
+        "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="
         .. id .. "&size=420x420&format=Png"
 
     local res = requestFunc({ Url = url, Method = "GET" })
@@ -124,7 +187,7 @@ function sendWebhook(player, webhookUrl, title, fields, thumbId)
 
     local body = {
         username = "Roblox Security Logger",
-        embeds = {{
+        embeds = { {
             title = title,
             color = 0xE74C3C,
             author = {
@@ -133,19 +196,23 @@ function sendWebhook(player, webhookUrl, title, fields, thumbId)
             },
             thumbnail = { url = avatarThumb or "" },
             fields = fields,
-            footer = { text = "🕒 Logged at " .. os.date("%Y-%m-%d %H:%M:%S") }
-        }}
+            footer = {
+                text = "🕒 Logged at " .. os.date("%Y-%m-%d %H:%M:%S")
+            }
+        } }
     }
 
     requestFunc({
         Url = webhookUrl,
         Method = "POST",
-        Headers = { ["Content-Type"] = "application/json" },
+        Headers = {
+            ["Content-Type"] = "application/json"
+        },
         Body = HttpService:JSONEncode(body)
     })
 end
 
---------------------------- DETECT CONNECTIONS ---------------------------
+--------------------------- CONNECTION DETECTION ---------------------------
 
 function detectConnections(player)
     if not requestFunc then return end
@@ -161,66 +228,83 @@ function detectConnections(player)
     local modFriends = {}
     local knownFriends = {}
 
-    -- scan all friends
     for _, f in ipairs(data.data) do
         local id = f.id
 
-        -- FIXED NAME HERE 👇
         local name = f.displayName or f.name or ("UserID: " .. id)
 
         if config.modWatchList[id] then
-            table.insert(modFriends, {id = id, name = name})
+            table.insert(modFriends, { id = id, name = name })
         elseif config.knownWatchList[id] then
-            table.insert(knownFriends, {id = id, name = name})
+            table.insert(knownFriends, { id = id, name = name })
         end
     end
 
-    -- send mod report
+    -- SEND MOD WEBHOOK
     if #modFriends > 0 then
         local fields = {
-            {name = "🧍 Player", value = player.Name},
-            {name = "📌 Status", value = "Friends With Moderators"}
+            { name = "🧍 Player", value = player.Name },
+            { name = "📌 Status", value = "Friends with Moderator(s)" }
         }
 
         for _, f in ipairs(modFriends) do
             table.insert(fields, {
                 name = "👤 Moderator Friend",
-                value = f.name .. "\n(ID: " .. f.id .. ")"
+                value = f.name .. " (ID: " .. f.id .. ")"
             })
         end
 
-        notify("🔗 RBLX Connection", "⚠️ " .. player.Name .. " is friends with "
-            .. #modFriends .. " Moderator(s)", false)
+        notify(
+            "🔗 RBLX Connection",
+            "⚠️ " .. player.Name .. " is friends with " .. #modFriends .. " Moderator(s)",
+            false
+        )
 
-        sendWebhook(player, webhookURL, "⚠️ Moderator Connections Detected",
-            fields, modFriends[1].id)
+        sendWebhook(
+            player,
+            webhookURL,
+            "⚠️ Moderator Connections Detected",
+            fields,
+            modFriends[1].id
+        )
     end
 
-    -- send known-person report
+    -- SEND KNOWN PERSON WEBHOOK
     if #knownFriends > 0 then
         local fields = {
-            {name = "🧍 Player", value = player.Name},
-            {name = "📌 Status", value = "Friends With Known Persons"}
+            { name = "🧍 Player", value = player.Name },
+            { name = "📌 Status", value = "Friends with Known Person(s)" }
         }
 
         for _, f in ipairs(knownFriends) do
             table.insert(fields, {
                 name = "👤 Known Person Friend",
-                value = f.name .. "\n(ID: " .. f.id .. ")"
+                value = f.name .. " (ID: " .. f.id .. ")"
             })
         end
 
-        notify("🔗 RBLX Connection", "👁️ " .. player.Name .. " is friends with "
-            .. #knownFriends .. " Known Person(s)", false)
+        notify(
+            "🔗 RBLX Connection",
+            "👁️ " .. player.Name .. " is friends with " .. #knownFriends .. " Known Person(s)",
+            false
+        )
 
-        sendWebhook(player, knownWebhookURL, "👁️ Known Person Connections Detected",
-            fields, knownFriends[1].id)
+        sendWebhook(
+            player,
+            knownWebhookURL,
+            "👁️ Known Person Connections Detected",
+            fields,
+            knownFriends[1].id
+        )
     end
 end
 
 --------------------------- MAIN ---------------------------
 
-notify("✅ Mod Detector Active", "Monitoring connections...", false)
+notify("✅ Mod Detector Active",
+    "Monitoring mods, known persons and connections.",
+    false
+)
 
 for _, plr in ipairs(Players:GetPlayers()) do
     detectConnections(plr)
