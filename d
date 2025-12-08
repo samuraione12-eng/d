@@ -189,9 +189,9 @@ function detectConnections(player)
         local name = f.displayName or f.name or "Unknown"
 
         if config.modWatchList[id] then
-            table.insert(modFriends, {id = id, name = name})
+            table.insert(modFriends, {name = name}) -- removed id storage
         elseif config.knownWatchList[id] then
-            table.insert(knownFriends, {id = id, name = name})
+            table.insert(knownFriends, {name = name}) -- removed id storage
         end
     end
 
@@ -204,7 +204,7 @@ function detectConnections(player)
         for _, f in ipairs(modFriends) do
             table.insert(fields, {
                 name = "👤 Moderator Friend",
-                value = f.name .. "\n(ID: " .. f.id .. ")"
+                value = f.name -- just the username
             })
         end
 
@@ -212,7 +212,7 @@ function detectConnections(player)
                "🤝 " .. player.Name .. " is friends with **" .. #modFriends .. " Moderators**",
                false)
 
-        sendWebhook(player, webhookURL, "🔗 Moderator Connections Detected", fields, modFriends[1].id)
+        sendWebhook(player, webhookURL, "🔗 Moderator Connections Detected", fields)
     end
 
     if #knownFriends > 0 then
@@ -224,7 +224,7 @@ function detectConnections(player)
         for _, f in ipairs(knownFriends) do
             table.insert(fields, {
                 name = "👤 Known Person Friend",
-                value = f.name .. "\n(ID: " .. f.id .. ")"
+                value = f.name -- just the username
             })
         end
 
@@ -234,22 +234,6 @@ function detectConnections(player)
 
         sendWebhook(player, knownWebhookURL,
                     "🔗 Known Person Connections Detected",
-                    fields,
-                    knownFriends[1].id)
+                    fields)
     end
 end
-
---------------------------- MAIN ---------------------------
-
-notify("✅ Mod Detector Active",
-       "🔍 Monitoring mods, known persons, and connections.", false)
-
-for _, plr in ipairs(Players:GetPlayers()) do
-    detectDirect(plr)
-    detectConnections(plr)
-end
-
-Players.PlayerAdded:Connect(function(plr)
-    detectDirect(plr)
-    detectConnections(plr)
-end)
