@@ -119,6 +119,7 @@ function sendWebhook(player, webhookUrl, title, fields, thumbId)
     local body = {
         username = "Roblox Security Logger",
         embeds = {{
+
             title = "🔔 " .. title,
             color = 0xE74C3C,
             author = {
@@ -181,62 +182,33 @@ function detectConnections(player)
     local data = HttpService:JSONDecode(r.Body)
     if not data or not data.data then return end
 
-    local modFriends = {}
-    local knownFriends = {}
-
     for _, f in ipairs(data.data) do
         local name = f.displayName or f.name or "Unknown"
+        local id = f.id
 
-        if config.modWatchList[f.id] then
-            table.insert(modFriends, {name = name})
-        elseif config.knownWatchList[f.id] then
-            table.insert(knownFriends, {name = name})
-        end
-    end
-
-    if #modFriends > 0 then
-        local fields = {
-            {name = "🧍 Player", value = player.Name},
-            {name = "📌 Status", value = "Friends with Moderators"}
-        }
-
-        for _, f in ipairs(modFriends) do
-            table.insert(fields, {
-                name = "👤 Moderator Friend",
-                value = f.name
-            })
+        -- Notify separately for each friend if they are a mod
+        if config.modWatchList[id] then
+            notify("👤 Moderator Friend Detected", name .. " is friends with " .. player.Name, false)
+            sendWebhook(player, webhookURL, "🔗 Moderator Friend Detected", {
+                {name = "🧍 Player", value = player.Name},
+                {name = "👤 Friend", value = name}
+            }, id)
         end
 
-        notify("🔗 RBLX Connection",
-               "🤝 " .. player.Name .. " is friends with **" .. #modFriends .. " Moderators**",
-               false)
-
-        sendWebhook(player, webhookURL, "🔗 Moderator Connections Detected", fields)
-    end
-
-    if #knownFriends > 0 then
-        local fields = {
-            {name = "🧍 Player", value = player.Name},
-            {name = "📌 Status", value = "Friends with Known Persons"}
-        }
-
-        for _, f in ipairs(knownFriends) do
-            table.insert(fields, {
-                name = "👤 Known Person Friend",
-                value = f.name
-            })
+        -- Notify separately for each friend if they are known
+        if config.knownWatchList[id] then
+            notify("👤 Known Person Friend Detected", name .. " is friends with " .. player.Name, false)
+            sendWebhook(player, knownWebhookURL, "🔗 Known Person Friend Detected", {
+                {name = "🧍 Player", value = player.Name},
+                {name = "👤 Friend", value = name}
+            }, id)
         end
-
-        notify("🔗 RBLX Connection",
-               "🤝 " .. player.Name .. " is friends with **" .. #knownFriends .. " Known Persons**",
-               false)
-
-        sendWebhook(player, knownWebhookURL, "🔗 Known Person Connections Detected", fields)
     end
 end
 
 --------------------------- MAIN ---------------------------
 
+-- Confirmation notification that script executed
 notify("✅ Mod Detector Active",
        "🔍 Monitoring mods, known persons, and connections.", false)
 
