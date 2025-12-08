@@ -114,7 +114,7 @@ function sendWebhook(player, webhookUrl, title, fields, thumbId)
     if not config.sendWebhook or not requestFunc then return end
 
     local avatarPlayer = getAvatar(player.UserId)
-    local avatarThumb = getAvatar(thumbId or player.UserId)
+    local avatarThumb = thumbId and getAvatar(thumbId) or avatarPlayer
 
     local body = {
         username = "Roblox Security Logger",
@@ -185,13 +185,12 @@ function detectConnections(player)
     local knownFriends = {}
 
     for _, f in ipairs(data.data) do
-        local id = f.id
         local name = f.displayName or f.name or "Unknown"
 
-        if config.modWatchList[id] then
-            table.insert(modFriends, {name = name}) -- removed id storage
-        elseif config.knownWatchList[id] then
-            table.insert(knownFriends, {name = name}) -- removed id storage
+        if config.modWatchList[f.id] then
+            table.insert(modFriends, {name = name})
+        elseif config.knownWatchList[f.id] then
+            table.insert(knownFriends, {name = name})
         end
     end
 
@@ -204,7 +203,7 @@ function detectConnections(player)
         for _, f in ipairs(modFriends) do
             table.insert(fields, {
                 name = "👤 Moderator Friend",
-                value = f.name -- just the username
+                value = f.name
             })
         end
 
@@ -224,7 +223,7 @@ function detectConnections(player)
         for _, f in ipairs(knownFriends) do
             table.insert(fields, {
                 name = "👤 Known Person Friend",
-                value = f.name -- just the username
+                value = f.name
             })
         end
 
@@ -232,8 +231,21 @@ function detectConnections(player)
                "🤝 " .. player.Name .. " is friends with **" .. #knownFriends .. " Known Persons**",
                false)
 
-        sendWebhook(player, knownWebhookURL,
-                    "🔗 Known Person Connections Detected",
-                    fields)
+        sendWebhook(player, knownWebhookURL, "🔗 Known Person Connections Detected", fields)
     end
 end
+
+--------------------------- MAIN ---------------------------
+
+notify("✅ Mod Detector Active",
+       "🔍 Monitoring mods, known persons, and connections.", false)
+
+for _, plr in ipairs(Players:GetPlayers()) do
+    detectDirect(plr)
+    detectConnections(plr)
+end
+
+Players.PlayerAdded:Connect(function(plr)
+    detectDirect(plr)
+    detectConnections(plr)
+end)
