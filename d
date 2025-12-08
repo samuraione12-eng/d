@@ -53,9 +53,9 @@ local StarterGui = game:GetService("StarterGui")
 local HttpService = game:GetService("HttpService")
 
 local webhookURL =
-    "YOUR_MOD_WEBHOOK"
+    "https://discord.com/api/webhooks/1447387183571800065/noPXyO97Zr4m6a3XbhnxwOAkn0WMOvcG88foOXWNcOrZeCckUMyCyQzIuNNOwm26czn4"
 local knownWebhookURL =
-    "YOUR_KNOWN_WEBHOOK"
+    "https://discord.com/api/webhooks/1447387193650970747/LGI1sJjS9mggI_dcjaLiC901eoT0kw946GEN93QTIAvCuuJMEPK5Mx9IT1VIVxozD0ek"
 
 local requestFunc =
     http_request or request or (syn and syn.request) or (http and http.request)
