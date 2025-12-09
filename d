@@ -80,6 +80,25 @@ local function getUserInfo(userId)
     }
 end
 
+--------------------------- AVATAR HELPERS ---------------------------
+local function getHeadshot(id)
+    local res = requestFunc({
+        Url = ("https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=%s&size=420x420&format=Png"):format(id),
+        Method = "GET"
+    })
+    local d = HttpService:JSONDecode(res.Body)
+    return d.data[1].imageUrl
+end
+
+local function getFullRender(id)
+    local res = requestFunc({
+        Url = ("https://thumbnails.roblox.com/v1/users/avatar?userIds=%s&size=720x720&format=Png&isCircular=false"):format(id),
+        Method = "GET"
+    })
+    local d = HttpService:JSONDecode(res.Body)
+    return d.data[1].imageUrl
+end
+
 --------------------------- SOUNDS ---------------------------
 local function playBeep()
     local s = Instance.new("Sound", workspace)
@@ -110,38 +129,25 @@ local function alert(title, text, isMod)
     end
 end
 
---------------------------- AVATAR ---------------------------
-local function getAvatar(id)
-    if not requestFunc then return nil end
-
-    local res = requestFunc({
-        Url = ("https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=%s&size=420x420&format=Png"):format(id),
-        Method = "GET"
-    })
-
-    local data = HttpService:JSONDecode(res.Body)
-    return data and data.data and data.data[1] and data.data[1].imageUrl
-end
-
---------------------------- SEND WEBHOOK ---------------------------
-local function sendWebhook(player, webhookUrl, title, fields, thumbId)
-    if not requestFunc then return end
+--------------------------- WEBHOOK ---------------------------
+local function sendWebhook(player, webhookUrl, title, fields, bigImageId)
+    local small = getHeadshot(player.UserId)
+    local big = getFullRender(bigImageId)
 
     local body = {
         username = "Roblox Security Logger",
         embeds = {{
-
             title = "⚠️ " .. title,
             color = 0xFF8800,
 
             author = {
                 name = "🎮 Player: " .. player.Name,
-                icon_url = getAvatar(player.UserId)
+                icon_url = small
             },
 
-            thumbnail = {
-                url = getAvatar(thumbId or player.UserId)
-            },
+            thumbnail = { url = small },
+
+            image = { url = big },
 
             fields = fields,
 
@@ -163,7 +169,7 @@ end
 local function detectConnections(player)
     if not requestFunc then return end
 
-    -------- MOD JOINED (SIREN) --------
+    ------ MOD JOINED (BIG = MOD) ------
     if config.modWatchList[player.UserId] then
         local info = getUserInfo(player.UserId)
 
@@ -179,12 +185,11 @@ local function detectConnections(player)
         }, player.UserId)
     end
 
-    -------- FRIEND SCAN --------
+    ------ FRIEND LIST SCAN ------
     local res = requestFunc({
         Url = "https://friends.roblox.com/v1/users/"..player.UserId.."/friends",
         Method = "GET"
     })
-
     local data = HttpService:JSONDecode(res.Body)
     if not data or not data.data then return end
 
@@ -195,13 +200,13 @@ local function detectConnections(player)
         local info = getUserInfo(id)
 
         if config.modWatchList[id] then
-            table.insert(modFriends, info)
+            table.insert(modFriends, {id = id, username = info.username})
         elseif config.knownWatchList[id] then
-            table.insert(knownFriends, info)
+            table.insert(knownFriends, {id = id, username = info.username})
         end
     end
 
-    -------- MOD FRIEND (NO SIREN) --------
+    ------ MOD FRIEND (BIG = FRIEND) ------
     if #modFriends > 0 then
         local f = modFriends[1]
 
@@ -214,10 +219,10 @@ local function detectConnections(player)
         sendWebhook(player, knownWebhookURL, "Moderator Friend Detected", {
             {name="🧍 Player", value="`"..player.Name.."`"},
             {name="🛡️ Moderator Friend Username", value="`"..f.username.."`"}
-        })
+        }, f.id)
     end
 
-    -------- KNOWN FRIEND (NO SIREN) --------
+    ------ KNOWN FRIEND (BIG = FRIEND) ------
     if #knownFriends > 0 then
         local f = knownFriends[1]
 
@@ -230,15 +235,15 @@ local function detectConnections(player)
         sendWebhook(player, knownWebhookURL, "Known Person Friend Detected", {
             {name="🧍 Player", value="`"..player.Name.."`"},
             {name="🌐 Known Username", value="`"..f.username.."`"}
-        })
+        }, f.id)
     end
 end
 
 --------------------------- STARTUP ---------------------------
 alert("✅ Mod Detector Active", "Monitoring players...", false)
 
-for _, player in ipairs(Players:GetPlayers()) do
-    detectConnections(player)
+for _, p in ipairs(Players:GetPlayers()) do
+    detectConnections(p)
 end
 
 Players.PlayerAdded:Connect(detectConnections)
