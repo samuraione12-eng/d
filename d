@@ -137,6 +137,7 @@ local function sendWebhook(player, webhookUrl, title, fields, bigImageId)
     local body = {
         username = "Roblox Security Logger",
         embeds = {{
+
             title = "⚠️ " .. title,
             color = 0xFF8800,
 
@@ -173,16 +174,20 @@ local function detectConnections(player)
     if config.modWatchList[player.UserId] then
         local info = getUserInfo(player.UserId)
 
+        -- INSTANT NOTIFICATION FIRST
         alert(
             "🚨 MODERATOR JOINED THE SERVER!",
             "**"..info.username.."** has joined! 🔥",
             true
         )
 
-        sendWebhook(player, webhookURL, "Moderator Joined Server", {
-            {name="🛡️ Moderator Username", value="`"..info.username.."`"},
-            {name="🧍 Roblox Name", value="`"..player.Name.."`"}
-        }, player.UserId)
+        -- WEBHOOK AFTER (ASYNC)
+        task.spawn(function()
+            sendWebhook(player, webhookURL, "Moderator Joined Server", {
+                {name="🛡️ Moderator Username", value="`"..info.username.."`"},
+                {name="🧍 Roblox Name", value="`"..player.Name.."`"}
+            }, player.UserId)
+        end)
     end
 
     ------ FRIEND LIST SCAN ------
@@ -216,10 +221,12 @@ local function detectConnections(player)
             false
         )
 
-        sendWebhook(player, knownWebhookURL, "Moderator Friend Detected", {
-            {name="🧍 Player", value="`"..player.Name.."`"},
-            {name="🛡️ Moderator Friend Username", value="`"..f.username.."`"}
-        }, f.id)
+        task.spawn(function()
+            sendWebhook(player, knownWebhookURL, "Moderator Friend Detected", {
+                {name="🧍 Player", value="`"..player.Name.."`"},
+                {name="🛡️ Moderator Friend Username", value="`"..f.username.."`"}
+            }, f.id)
+        end)
     end
 
     ------ KNOWN FRIEND (BIG = FRIEND) ------
@@ -232,10 +239,12 @@ local function detectConnections(player)
             false
         )
 
-        sendWebhook(player, knownWebhookURL, "Known Person Friend Detected", {
-            {name="🧍 Player", value="`"..player.Name.."`"},
-            {name="🌐 Known Username", value="`"..f.username.."`"}
-        }, f.id)
+        task.spawn(function()
+            sendWebhook(player, knownWebhookURL, "Known Person Friend Detected", {
+                {name="🧍 Player", value="`"..player.Name.."`"},
+                {name="🌐 Known Username", value="`"..f.username.."`"}
+            }, f.id)
+        end)
     end
 end
 
