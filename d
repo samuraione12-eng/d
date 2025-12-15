@@ -41,7 +41,7 @@ local config = {
     normalBeepId = "rbxassetid://97367190838793",
     sirenSoundId = "rbxassetid://101333891213137",
     beepVolume = 2,
-    sirenVolume = 10
+    sirenVolume = 6
 }
 
 --------------------------- SERVICES ---------------------------
