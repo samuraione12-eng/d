@@ -1,3 +1,37 @@
+
+
+
+
+-------------------------------------------------
+-- WRONG GAME CHECK + CUSTOM NOTIFICATION
+-------------------------------------------------
+if game.PlaceId ~= 17625359962 then
+    local StarterGui = game:GetService("StarterGui")
+
+    -- Notification
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = "❌ Wrong Game",
+            Text = "This script only works in the correct game.",
+            Duration = 6
+        })
+    end)
+
+    -- Different sound
+    local s = Instance.new("Sound")
+    s.SoundId = "rbxassetid://9118823107" -- change to ANY sound you want
+    s.Volume = 3
+    s.Parent = workspace
+    s:Play()
+
+    task.delay(7, function()
+        if s then s:Destroy() end
+    end)
+
+    return
+end
+
+
 --------------------------- CONFIG ---------------------------
 local config = {
     enabled = true,
