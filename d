@@ -1,27 +1,25 @@
-
-
-
-
 -------------------------------------------------
--- WRONG GAME CHECK + CUSTOM NOTIFICATION
+-- RIVALS PLACE ID CHECK
 -------------------------------------------------
-if game.PlaceId ~= 17625359962 then
+local allowedPlaces = {
+    [6035872082] = true,   -- Rivals main / matches
+    [17625359962] = true  -- Rivals lobby
+}
+
+if not allowedPlaces[game.PlaceId] then
     local StarterGui = game:GetService("StarterGui")
 
-    -- Notification
     pcall(function()
         StarterGui:SetCore("SendNotification", {
             Title = "❌ Wrong Game",
-            Text = "This script only works in the correct game.",
+            Text = "This script only works in Rivals.",
             Duration = 6
         })
     end)
 
-    -- Different sound
-    local s = Instance.new("Sound")
-    s.SoundId = "rbxassetid://9118823107" -- change to ANY sound you want
+    local s = Instance.new("Sound", workspace)
+    s.SoundId = "rbxassetid://9118823107" -- wrong-game sound
     s.Volume = 3
-    s.Parent = workspace
     s:Play()
 
     task.delay(7, function()
