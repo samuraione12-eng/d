@@ -1,25 +1,23 @@
 -------------------------------------------------
--- RIVALS PLACE ID CHECK
+-- WRONG GAME CHECK (RIVALS FIXED)
 -------------------------------------------------
-local allowedPlaces = {
-    [6035872082] = true,   -- Rivals main / matches
-    [17625359962] = true  -- Rivals lobby
-}
+local RIVALS_GAME_ID = 6035872082
 
-if not allowedPlaces[game.PlaceId] then
+if game.GameId ~= RIVALS_GAME_ID then
     local StarterGui = game:GetService("StarterGui")
 
     pcall(function()
         StarterGui:SetCore("SendNotification", {
             Title = "❌ Wrong Game",
-            Text = "This script only works in Rivals.",
+            Text = "ITS THE WRONG FUCKING GAME YOU FAT FUCK",
             Duration = 6
         })
     end)
 
-    local s = Instance.new("Sound", workspace)
-    s.SoundId = "rbxassetid://9118823107" -- wrong-game sound
-    s.Volume = 3
+    local s = Instance.new("Sound")
+    s.SoundId = "rbxassetid://119554021427991"
+    s.Volume = 5
+    s.Parent = workspace
     s:Play()
 
     task.delay(7, function()
