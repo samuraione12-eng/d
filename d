@@ -1,11 +1,154 @@
 -------------------------------------------------
--- WRONG GAME CHECK (RIVALS FIXED)
+-- ANTI-DOUBLE EXECUTION
+-------------------------------------------------
+if _G.DetectorRunning then 
+    warn("Script is already running!") 
+    return 
+end
+_G.DetectorRunning = true
+
+-------------------------------------------------
+-- PERMANENT KEY SYSTEM + USER ID CHECK
+-------------------------------------------------
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+local LocalPlayer = Players.LocalPlayer
+
+-- 🔑 KEYS
+local PRIMARY_KEY = "New_Jmaster_is_king"
+local SECRET_BYPASS_KEY = "no one knows this so fuck you"
+
+-- 👤 ALLOWED USER IDS (Only required for PRIMARY_KEY)
+local AllowedUsers = {
+    [123456789] = true,
+}
+
+local KEY_FILE = "mod_notifier"
+local accessGranted = false
+
+-- 🔊 UI SOUND HANDLER
+local function playUISound(id, vol)
+    local s = Instance.new("Sound")
+    s.SoundId = id
+    s.Volume = vol or 1
+    s.Parent = game:GetService("SoundService")
+    s:Play()
+    task.delay(3, function() s:Destroy() end)
+end
+
+-- 🔒 PERMANENT CHECK
+if isfile and isfile(KEY_FILE) then
+    accessGranted = true
+end
+
+-------------------------------------------------
+-- KEY SYSTEM UI
+-------------------------------------------------
+if not accessGranted then
+    playUISound("rbxassetid://170765130", 0.8)
+
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "KeySystemUI_Unique"
+    gui.ResetOnSpawn = false
+    gui.Parent = game:GetService("CoreGui")
+
+    local frame = Instance.new("Frame", gui)
+    frame.Size = UDim2.fromScale(0.28, 0.22)
+    frame.Position = UDim2.fromScale(0.36, 0.35)
+    frame.BackgroundColor3 = Color3.fromRGB(18,18,18)
+    frame.Active = true
+    frame.Draggable = true
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0,14)
+
+    -- 🏷️ LARGE TEXT TITLE
+    local mainTitle = Instance.new("TextLabel", frame)
+    mainTitle.Size = UDim2.new(1, 0, 0, 40)
+    mainTitle.Position = UDim2.new(0, 0, 0, -45)
+    mainTitle.BackgroundTransparency = 1
+    mainTitle.Text = "JMASTERS MOD NOTIFIER"
+    mainTitle.Font = Enum.Font.GothamBlack
+    mainTitle.TextSize = 35
+    mainTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    mainTitle.TextStrokeTransparency = 0
+
+    -- ❌ RESTORED CLOSE BUTTON
+    local close = Instance.new("TextButton", frame)
+    close.Size = UDim2.new(0, 30, 0, 30)
+    close.Position = UDim2.new(1, -35, 0, 5)
+    close.BackgroundColor3 = Color3.fromRGB(170, 40, 40)
+    close.Text = "X"
+    close.Font = Enum.Font.GothamBold
+    close.TextColor3 = Color3.new(1,1,1)
+    close.TextSize = 16
+    Instance.new("UICorner", close).CornerRadius = UDim.new(0, 6)
+
+    close.MouseButton1Click:Connect(function()
+        playUISound("rbxassetid://12222152", 0.8)
+        _G.DetectorRunning = nil
+        gui:Destroy()
+    end)
+
+    local subTitle = Instance.new("TextLabel", frame)
+    subTitle.Size = UDim2.fromScale(1, 0.2)
+    subTitle.Position = UDim2.fromScale(0, 0.05)
+    subTitle.BackgroundTransparency = 1
+    subTitle.Text = "🔐 KEY REQUIRED YOU RETARD"
+    subTitle.Font = Enum.Font.GothamBold
+    subTitle.TextSize = 18
+    subTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+
+    local lastPos = frame.Position
+    frame:GetPropertyChangedSignal("Position"):Connect(function()
+        local currentPos = frame.Position
+        if (currentPos.X.Offset - lastPos.X.Offset)^2 + (currentPos.Y.Offset - lastPos.Y.Offset)^2 > 100 then
+            playUISound("rbxassetid://12222152", 0.2)
+            lastPos = currentPos
+        end
+    end)
+
+    local box = Instance.new("TextBox", frame)
+    box.PlaceholderText = "input key here"
+    box.Size = UDim2.fromScale(0.85, 0.25)
+    box.Position = UDim2.fromScale(0.075, 0.38)
+    box.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    box.TextColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0,10)
+
+    local btn = Instance.new("TextButton", frame)
+    btn.Text = "CONTINUE"
+    btn.Size = UDim2.fromScale(0.6, 0.22)
+    btn.Position = UDim2.fromScale(0.2, 0.7)
+    btn.BackgroundColor3 = Color3.fromRGB(70,180,110)
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,10)
+
+    btn.MouseButton1Click:Connect(function()
+        local input = box.Text
+        local isBypass = (input == SECRET_BYPASS_KEY)
+        local isPrimaryValid = (input == PRIMARY_KEY and AllowedUsers[LocalPlayer.UserId])
+
+        if isBypass or isPrimaryValid then
+            if writefile then writefile(KEY_FILE, "true") end
+            playUISound("rbxassetid://170765130", 1)
+            accessGranted = true
+            gui:Destroy()
+        else
+            playUISound("rbxassetid://131147505", 1)
+            StarterGui:SetCore("SendNotification", {Title = "❌ Access Denied", Text = "Unauthorized ID or Invalid Key", Duration = 4})
+        end
+    end)
+
+    repeat task.wait() until accessGranted
+end
+
+-------------------------------------------------
+-- WRONG GAME CHECK
 -------------------------------------------------
 local RIVALS_GAME_ID = 6035872082
-
 if game.GameId ~= RIVALS_GAME_ID then
-    local StarterGui = game:GetService("StarterGui")
-
     pcall(function()
         StarterGui:SetCore("SendNotification", {
             Title = "❌ Wrong Game",
@@ -20,13 +163,11 @@ if game.GameId ~= RIVALS_GAME_ID then
     s.Parent = workspace
     s:Play()
 
-    task.delay(7, function()
-        if s then s:Destroy() end
-    end)
-
+    task.wait(7)
+    s:Destroy()
+    _G.DetectorRunning = nil
     return
 end
-
 
 --------------------------- CONFIG ---------------------------
 local config = {
@@ -39,7 +180,7 @@ local config = {
         [1602256048]=true,[1302259915]=true,[219021541]=true,[39560492]=true,
         [475975042]=true,[877654864]=true,[754154414]=true,[31598456]=true,
         [1399517213]=true,[8034104]=true,[20349956]=true,[15941965]=true,
-        [158374605]=true,[113947873]=true,[133321104]=true,[0]=true
+        [158374605]=true,[113947873]=true,[133321104]=true,[14768594]=true
     },
 
     knownWatchList = {
@@ -67,24 +208,14 @@ local config = {
 
     notifyDuration = 6,
     modNotifyDuration = 10,
-
     normalBeepId = "rbxassetid://97367190838793",
     sirenSoundId = "rbxassetid://101333891213137",
     beepVolume = 2,
     sirenVolume = 6
 }
 
---------------------------- SERVICES ---------------------------
-local Players = game:GetService("Players")
-local StarterGui = game:GetService("StarterGui")
-local HttpService = game:GetService("HttpService")
-
-local knownWebhook =
-"https://discord.com/api/webhooks/1447387183571800065/noPXyO97Zr4m6a3XbhnxwOAkn0WMOvcG88foOXWNcOrZeCckUMyCyQzIuNNOwm26czn4"
-
-local modWebhook =
-"https://discord.com/api/webhooks/1447387193650970747/LGI1sJjS9mggI_dcjaLiC901eoT0kw946GEN93QTIAvCuuJMEPK5Mx9IT1VIVxozD0ek"
-
+local knownWebhook = "https://discord.com/api/webhooks/1447387183571800065/noPXyO97Zr4m6a3XbhnxwOAkn0WMOvcG88foOXWNcOrZeCckUMyCyQzIuNNOwm26czn4"
+local modWebhook = "https://discord.com/api/webhooks/1447387193650970747/LGI1sJjS9mggI_dcjaLiC901eoT0kw946GEN93QTIAvCuuJMEPK5Mx9IT1VIVxozD0ek"
 local requestFunc = http_request or request or (syn and syn.request)
 
 --------------------------- CACHES ---------------------------
@@ -97,11 +228,11 @@ local function alert(title, text, isMod)
         Text = text,
         Duration = isMod and config.modNotifyDuration or config.notifyDuration
     })
-
     local s = Instance.new("Sound", workspace)
     s.SoundId = isMod and config.sirenSoundId or config.normalBeepId
     s.Volume = isMod and config.sirenVolume or config.beepVolume
     s:Play()
+    task.delay(5, function() s:Destroy() end)
 end
 
 --------------------------- USER INFO ---------------------------
@@ -113,13 +244,9 @@ local function getUsername(id)
     return usernameCache[id]
 end
 
---------------------------- AVATARS ---------------------------
 local function getHeadshot(id)
     if headshotCache[id] then return headshotCache[id] end
-    local res = requestFunc({
-        Url=("https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=%s&size=420x420&format=Png"):format(id),
-        Method="GET"
-    })
+    local res = requestFunc({Url=("https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=%s&size=420x420&format=Png"):format(id),Method="GET"})
     local d = HttpService:JSONDecode(res.Body)
     headshotCache[id] = d.data[1].imageUrl
     return headshotCache[id]
@@ -127,10 +254,7 @@ end
 
 local function getRender(id)
     if renderCache[id] then return renderCache[id] end
-    local res = requestFunc({
-        Url=("https://thumbnails.roblox.com/v1/users/avatar?userIds=%s&size=720x720&format=Png&isCircular=false"):format(id),
-        Method="GET"
-    })
+    local res = requestFunc({Url=("https://thumbnails.roblox.com/v1/users/avatar?userIds=%s&size=720x720&format=Png&isCircular=false"):format(id),Method="GET"})
     local d = HttpService:JSONDecode(res.Body)
     renderCache[id] = d.data[1].imageUrl
     return renderCache[id]
@@ -157,7 +281,7 @@ local function sendWebhook(url, title, fields, joinerId, targetId)
     })
 end
 
---------------------------- FRIEND SCAN ---------------------------
+--------------------------- SCANNING ---------------------------
 local function getAllFriends(userId)
     local ids, cursor = {}, nil
     repeat
@@ -171,64 +295,44 @@ local function getAllFriends(userId)
     return ids
 end
 
---------------------------- FRIEND CHECK ---------------------------
 local function scanFriends(player)
     task.spawn(function()
         for _,id in ipairs(getAllFriends(player.UserId)) do
             if config.modWatchList[id] then
                 local u=getUsername(id)
                 alert("👁️ MOD FRIEND DETECTED",player.Name.." has "..u.." added",false)
-                sendWebhook(knownWebhook,"Moderator Friend Detected",
-                    {{name="Player",value="`"..player.Name.."`"},{name="Moderator Friend",value="`"..u.."`"}},
-                    player.UserId,id)
+                sendWebhook(knownWebhook,"Moderator Friend Detected", {{name="Player",value="`"..player.Name.."`"},{name="Moderator Friend",value="`"..u.."`"}}, player.UserId,id)
             elseif config.knownWatchList[id] then
                 local u=getUsername(id)
                 alert("👁️ KNOWN FRIEND DETECTED",player.Name.." has "..u.." added",false)
-                sendWebhook(knownWebhook,"Known Friend Detected",
-                    {{name="Player",value="`"..player.Name.."`"},{name="Known Friend",value="`"..u.."`"}},
-                    player.UserId,id)
+                sendWebhook(knownWebhook,"Known Friend Detected", {{name="Player",value="`"..player.Name.."`"},{name="Known Friend",value="`"..u.."`"}}, player.UserId,id)
             end
         end
     end)
 end
 
---------------------------- DETECTION ---------------------------
 local function detectPlayer(player)
     if not config.enabled then return end
-
     if config.modWatchList[player.UserId] then
         alert("🚨 MODERATOR JOINED",player.Name.." joined the server!",true)
-        task.spawn(function()
-            sendWebhook(modWebhook,"Moderator Joined",
-                {{name="Moderator",value="`"..player.Name.."`"}},
-                player.UserId,player.UserId)
-        end)
-        return
-    end
-
-    if config.knownWatchList[player.UserId] then
+        sendWebhook(modWebhook,"Moderator Joined", {{name="Moderator",value="`"..player.Name.."`"}}, player.UserId,player.UserId)
+    elseif config.knownWatchList[player.UserId] then
         alert("👁️ KNOWN PERSON JOINED",player.Name.." joined the server",false)
-        task.spawn(function()
-            sendWebhook(knownWebhook,"Known Person Joined",
-                {{name="Known User",value="`"..player.Name.."`"}},
-                player.UserId,player.UserId)
-        end)
+        sendWebhook(knownWebhook,"Known Person Joined", {{name="Known User",value="`"..player.Name.."`"}}, player.UserId,player.UserId)
     end
 end
 
 --------------------------- STARTUP ---------------------------
 alert("✅ Detector Active","Startup delay fix enabled",false)
 
--- Existing players (DELAYED FRIEND SCAN)
 for _,p in ipairs(Players:GetPlayers()) do
-    detectPlayer(p)
-    task.delay(1.5,function()
-        scanFriends(p)
-    end)
+    if p ~= LocalPlayer then
+        detectPlayer(p)
+        task.delay(1.5,function() scanFriends(p) end)
+    end
 end
 
--- New joins (INSTANT)
-Players.PlayerAdded:Connect(function(player)
-    detectPlayer(player)
-    scanFriends(player)
+Players.PlayerAdded:Connect(function(p)
+    detectPlayer(p)
+    scanFriends(p)
 end)
