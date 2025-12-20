@@ -22,7 +22,7 @@ local SECRET_BYPASS_KEY = "no one knows this so fuck you"
 
 -- 👤 ALLOWED USER IDS (Only required for PRIMARY_KEY)
 local AllowedUsers = {
-    [123456789] = true,
+    [14768594] = true,
 }
 
 local KEY_FILE = "mod_notifier"
