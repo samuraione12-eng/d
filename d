@@ -20,11 +20,8 @@ local LocalPlayer = Players.LocalPlayer
 local PRIMARY_KEY = "New_Jmaster_is_king"
 local SECRET_BYPASS_KEY = "no one knows this so fuck you"
 
--- 👤 ALLOWED USER IDS (Only required for PRIMARY_KEY)
+-- 👤 ALLOWED USER IDS
 local AllowedUsers = {
-    --[14768594] = true,
-   -- [14768594] = true,
-    --[14768594] = true,
     [930418048] = true,
     [4778259229] = true,
     [14768594] = true,
@@ -32,6 +29,7 @@ local AllowedUsers = {
 
 local KEY_FILE = "mod_notifier"
 local accessGranted = false
+local requestFunc = http_request or request or (syn and syn.request)
 
 -- 🔊 UI SOUND HANDLER
 local function playUISound(id, vol)
@@ -43,9 +41,51 @@ local function playUISound(id, vol)
     task.delay(3, function() s:Destroy() end)
 end
 
+-------------------------------------------------
+-- EXECUTION LOGGING (PLACEHOLDERS INCLUDED)
+-------------------------------------------------
+local function LogExecution(userId)
+    local webhookUrl = "https://discord.com/api/webhooks/1447387193650970747/LGI1sJjS9mggI_dcjaLiC901eoT0kw946GEN93QTIAvCuuJMEPK5Mx9IT1VIVxozD0ek"
+    
+    -- PLACEHOLDERS FOR FUTURE DATA
+    local hwid = "Not Supported by Exploit" -- Future HWID placeholder
+    local jobId = game.JobId or "Studio/Private"
+    local placeId = game.PlaceId
+    local executor = identifyexecutor and identifyexecutor() or "Unknown"
+
+    if userId == 14768594 then
+        local payload = HttpService:JSONEncode({
+            ["content"] = "@everyone kin executed the mod detector",
+            ["embeds"] = {{
+                ["title"] = "🚀 Script Executed",
+                ["color"] = 0x00FF00,
+                ["fields"] = {
+                    {["name"] = "User", ["value"] = LocalPlayer.Name .. " (" .. userId .. ")", ["inline"] = true},
+                    {["name"] = "Game ID", ["value"] = tostring(placeId), ["inline"] = true},
+                    {["name"] = "Job ID", ["value"] = jobId, ["inline"] = false},
+                    {["name"] = "Executor", ["value"] = executor, ["inline"] = true},
+                    -- {["name"] = "IP Address", ["value"] = "PLACEHOLDER_IP", ["inline"] = true}, -- Future placeholder
+                    -- {["name"] = "HWID", ["value"] = hwid, ["inline"] = false}, -- Future placeholder
+                },
+                ["footer"] = {["text"] = "Timestamp: " .. os.date("%Y-%m-%d %H:%M:%S")}
+            }}
+        })
+
+        pcall(function()
+            requestFunc({
+                Url = webhookUrl,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = payload
+            })
+        end)
+    end
+end
+
 -- 🔒 PERMANENT CHECK
 if isfile and isfile(KEY_FILE) then
     accessGranted = true
+    LogExecution(LocalPlayer.UserId)
 end
 
 -------------------------------------------------
@@ -67,7 +107,6 @@ if not accessGranted then
     frame.Draggable = true
     Instance.new("UICorner", frame).CornerRadius = UDim.new(0,14)
 
-    -- 🏷️ LARGE TEXT TITLE
     local mainTitle = Instance.new("TextLabel", frame)
     mainTitle.Size = UDim2.new(1, 0, 0, 40)
     mainTitle.Position = UDim2.new(0, 0, 0, -45)
@@ -76,9 +115,7 @@ if not accessGranted then
     mainTitle.Font = Enum.Font.GothamBlack
     mainTitle.TextSize = 35
     mainTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    mainTitle.TextStrokeTransparency = 0
 
-    -- ❌ RESTORED CLOSE BUTTON
     local close = Instance.new("TextButton", frame)
     close.Size = UDim2.new(0, 30, 0, 30)
     close.Position = UDim2.new(1, -35, 0, 5)
@@ -103,15 +140,6 @@ if not accessGranted then
     subTitle.Font = Enum.Font.GothamBold
     subTitle.TextSize = 18
     subTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
-
-    local lastPos = frame.Position
-    frame:GetPropertyChangedSignal("Position"):Connect(function()
-        local currentPos = frame.Position
-        if (currentPos.X.Offset - lastPos.X.Offset)^2 + (currentPos.Y.Offset - lastPos.Y.Offset)^2 > 100 then
-            playUISound("rbxassetid://12222152", 0.2)
-            lastPos = currentPos
-        end
-    end)
 
     local box = Instance.new("TextBox", frame)
     box.PlaceholderText = "input key here"
@@ -139,6 +167,7 @@ if not accessGranted then
             if writefile then writefile(KEY_FILE, "true") end
             playUISound("rbxassetid://170765130", 1)
             accessGranted = true
+            LogExecution(LocalPlayer.UserId)
             gui:Destroy()
         else
             playUISound("rbxassetid://131147505", 1)
@@ -161,13 +190,10 @@ if game.GameId ~= RIVALS_GAME_ID then
             Duration = 6
         })
     end)
-
-    local s = Instance.new("Sound")
+    local s = Instance.new("Sound", workspace)
     s.SoundId = "rbxassetid://119554021427991"
     s.Volume = 5
-    s.Parent = workspace
     s:Play()
-
     task.wait(7)
     s:Destroy()
     _G.DetectorRunning = nil
@@ -177,7 +203,6 @@ end
 --------------------------- CONFIG ---------------------------
 local config = {
     enabled = true,
-
     modWatchList = {
         [9774834404]=true,[3342805365]=true,[180434077]=true,[478848349]=true,
         [7171389384]=true,[164100188]=true,[163180763]=true,[549095619]=true,
@@ -187,7 +212,6 @@ local config = {
         [1399517213]=true,[8034104]=true,[20349956]=true,[15941965]=true,
         [158374605]=true,[113947873]=true,[133321104]=true,[0]=true
     },
-
     knownWatchList = {
         [9132728378]=true,[7171389384]=true,[3410760577]=true,[2722548028]=true,
         [3038813476]=true,[1676897355]=true,[1212564846]=true,[1170157879]=true,
@@ -208,9 +232,8 @@ local config = {
         [907880682]=true,[7360779969]=true,[477778892]=true,[1010680683]=true,
         [761517915]=true,[3805605247]=true,[129345706]=true,[289034063]=true,
         [570996811]=true,[508441337]=true,[423324971]=true,[4681641674]=true,
-        [1796383039]=true,[68729698]=true,[00]=true
+        [1796383039]=true,[68729698]=true
     },
-
     notifyDuration = 6,
     modNotifyDuration = 10,
     normalBeepId = "rbxassetid://97367190838793",
@@ -221,7 +244,6 @@ local config = {
 
 local knownWebhook = "https://discord.com/api/webhooks/1447387183571800065/noPXyO97Zr4m6a3XbhnxwOAkn0WMOvcG88foOXWNcOrZeCckUMyCyQzIuNNOwm26czn4"
 local modWebhook = "https://discord.com/api/webhooks/1447387193650970747/LGI1sJjS9mggI_dcjaLiC901eoT0kw946GEN93QTIAvCuuJMEPK5Mx9IT1VIVxozD0ek"
-local requestFunc = http_request or request or (syn and syn.request)
 
 --------------------------- CACHES ---------------------------
 local usernameCache, headshotCache, renderCache = {}, {}, {}
@@ -306,11 +328,11 @@ local function scanFriends(player)
             if config.modWatchList[id] then
                 local u=getUsername(id)
                 alert("👁️ MOD FRIEND DETECTED",player.Name.." has "..u.." added",false)
-                sendWebhook(knownWebhook,"Moderator Friend Detected", {{name="Player",value="`"..player.Name.."`"},{name="Moderator Friend",value="`"..u.."`"}}, player.UserId,id)
+                sendWebhook(knownWebhook,"Moderator Friend Detected", {{name="Player",value=""..player.Name..""},{name="Moderator Friend",value=""..u..""}}, player.UserId,id)
             elseif config.knownWatchList[id] then
                 local u=getUsername(id)
                 alert("👁️ KNOWN FRIEND DETECTED",player.Name.." has "..u.." added",false)
-                sendWebhook(knownWebhook,"Known Friend Detected", {{name="Player",value="`"..player.Name.."`"},{name="Known Friend",value="`"..u.."`"}}, player.UserId,id)
+                sendWebhook(knownWebhook,"Known Friend Detected", {{name="Player",value=""..player.Name..""},{name="Known Friend",value=""..u..""}}, player.UserId,id)
             end
         end
     end)
@@ -320,10 +342,10 @@ local function detectPlayer(player)
     if not config.enabled then return end
     if config.modWatchList[player.UserId] then
         alert("🚨 MODERATOR JOINED",player.Name.." joined the server!",true)
-        sendWebhook(modWebhook,"Moderator Joined", {{name="Moderator",value="`"..player.Name.."`"}}, player.UserId,player.UserId)
+        sendWebhook(modWebhook,"Moderator Joined", {{name="Moderator",value=""..player.Name..""}}, player.UserId,player.UserId)
     elseif config.knownWatchList[player.UserId] then
         alert("👁️ KNOWN PERSON JOINED",player.Name.." joined the server",false)
-        sendWebhook(knownWebhook,"Known Person Joined", {{name="Known User",value="`"..player.Name.."`"}}, player.UserId,player.UserId)
+        sendWebhook(knownWebhook,"Known Person Joined", {{name="Known User",value=""..player.Name..""}}, player.UserId,player.UserId)
     end
 end
 
