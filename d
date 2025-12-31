@@ -53,7 +53,7 @@ local function LogExecution(userId)
     local placeId = game.PlaceId
     local executor = identifyexecutor and identifyexecutor() or "Unknown"
 
-    if userId == 14768594 then
+    if userId == 14768595 then
         local payload = HttpService:JSONEncode({
             ["content"] = "@everyone kin executed the mod detector",
             ["embeds"] = {{
