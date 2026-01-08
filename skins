@@ -190,7 +190,7 @@ if not game:IsLoaded() then
 end
 
 -- 10-second delay after loading
-task.wait(10)
+task.wait(15)
 
 -- Services
 local Players = game:GetService("Players")
