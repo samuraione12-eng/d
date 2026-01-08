@@ -1,3 +1,189 @@
+
+
+--[[
+    8bit Anti-Bypass Check v2 (Server-Side Logging)
+    Place this code at the VERY TOP of the script that your keysystem loads.
+    This version sends logs to your secure server endpoint instead of directly to Discord.
+]]
+
+-- ===================================================================================
+--      !!! IMPORTANT SERVER CONFIGURATION !!!
+--  This MUST match the configuration of your keysystem and Node.js serverr.
+-- ===================================================================================
+local PROXY_URL = "https://my-key-server.onrender.com" -- ✅ Base URL of your server
+local AUTH_TOKEN = "A_STRONG_SECRET_AUTH_TOKEN"       -- ❗ MUST match the AUTH_TOKEN on your server
+local XOR_KEY = "YOUR_SECRET_XOR_KEY"                 -- ❗ MUST match the XOR_KEY on your server
+-- ===================================================================================
+
+
+--//=============================[ SERVICES & GLOBALS ]==============================\\--
+
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
+local MarketplaceService = game:GetService("MarketplaceService")
+
+local Player = Players.LocalPlayer
+local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request or (fluxus and fluxus.request)
+
+--//=============================[ HELPER FUNCTIONS ]================================\\--
+
+-- XOR cipher function to encrypt the log data before sending to the server
+local function xor(inputStr, key)
+    local output = {}
+    for i = 1, #inputStr do
+        local charCode = string.byte(inputStr, i)
+        local keyCode = string.byte(key, (i - 1) % #key + 1)
+        table.insert(output, string.char(bit32.bxor(charCode, keyCode)))
+    end
+    return table.concat(output)
+end
+
+local function getExecutorName()
+    if identifyexecutor then local name, _ = identifyexecutor() return name or "Unknown (from identifyexecutor)" end
+    if getexecutorname then return getexecutorname() end
+    if syn and syn.protect_gui then return "Synapse X" end
+    if is_synapse_function then return "Synapse X" end
+    if getgenv().SW_VERSION or getgenv().ScriptWare then return "Script-Ware" end
+    if Krnl or getgenv().KRNL_LOADED then return "Krnl" end
+    if getgenv().Fluxus then return "Fluxus" end
+    if getgenv().Electron then return "Electron" end
+    if getgenv().Oxygen then return "Oxygen U" end
+    if getgenv().Comet then return "Comet" end
+    if getgenv().Sentinel then return "Sentinel" end
+    if getgenv().ProtoSmasher then return "ProtoSmasher" end
+    return "Undetected"
+end
+
+local function getDeviceType()
+    if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then return "Mobile"
+    elseif UserInputService.KeyboardEnabled and UserInputService.MouseEnabled then return "PC / Desktop"
+    elseif UserInputService.GamepadEnabled and not UserInputService.KeyboardEnabled then return "Console"
+    else return "Unknown" end
+end
+
+local function getAccountAge(player) return player and player.AccountAge or "Unknown" end
+
+--//===========================[ SERVER LOG FUNCTION ]=============================\\--
+
+local function SendBypassLogToServer()
+    if not httpRequest or not PROXY_URL or PROXY_URL == "" then return end
+
+    task.spawn(function()
+        -- 1. Gather all necessary player data
+        local gameName = "Unknown"
+        pcall(function() gameName = MarketplaceService:GetProductInfo(game.PlaceId).Name end)
+        
+        local thumbnailUrl = ""
+        pcall(function() thumbnailUrl = Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
+
+        -- 2. Construct the data payload for the server
+        local logData = {
+            -- This specific keyType will trigger the bypass webhook on your server
+            keyType = "Bypass Attempt", 
+            keyUsed = "N/A", 
+            
+            -- Other standard player info
+            playerName = Player.Name,
+            playerUserId = Player.UserId,
+            playerDisplayName = Player.DisplayName,
+            accountAge = getAccountAge(Player),
+            device = getDeviceType(),
+            executor = getExecutorName(),
+            gameName = gameName,
+            gameId = game.PlaceId,
+            jobId = game.JobId,
+            hasPremium = Player.MembershipType == Enum.MembershipType.Premium,
+            thumbnailUrl = thumbnailUrl
+        }
+
+        -- 3. Encrypt the data payload
+        local encodedPayload = xor(HttpService:JSONEncode(logData), XOR_KEY)
+
+        -- 4. Send the encrypted data to your server's /api/log endpoint
+        pcall(function()
+            httpRequest({
+                Url = PROXY_URL .. "/api/log",
+                Method = "POST",
+                Headers = {
+                    ["Authorization"] = AUTH_TOKEN,
+                    ["Content-Type"] = "text/plain"
+                },
+                Body = encodedPayload
+            })
+        end)
+    end)
+end
+
+
+--//=============================[ BYPASS CHECK & ACTION ]=============================\\--
+
+if _G.EIGHT_BIT_AUTH_TOKEN ~= "YOUR_SECRET_TOKEN_HERE" then
+    -- If the token is missing or incorrect, it's a bypass attempt.
+    
+    -- Send the log data to your server. The server will handle the webhook.
+    SendBypassLogToServer()
+
+    -- Create the jumpscare/notification GUI. This part remains the same.
+    local bypassGui = Instance.new("ScreenGui", Player:WaitForChild("PlayerGui"))
+    bypassGui.Name = "BypassAttempted"
+    bypassGui.ResetOnSpawn = false
+    bypassGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+
+    local background = Instance.new("Frame", bypassGui)
+    background.Size = UDim2.new(1, 0, 1, 0)
+    background.BackgroundColor3 = Color3.new(0, 0, 0)
+    background.ZIndex = 999999
+
+    local messageLabel = Instance.new("TextLabel", background)
+    messageLabel.Size = UDim2.new(1, 0, 1, 0)
+    messageLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+    messageLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    messageLabel.Font = Enum.Font.Code
+    messageLabel.TextSize = 40
+    messageLabel.TextWrapped = true
+    messageLabel.Text = "Keysystem bypass detected. Your information has been logged. you cant skid my script lol"
+    messageLabel.ZIndex = 1000000
+
+    local jumpscareSound1 = Instance.new("Sound", bypassGui)
+    jumpscareSound1.SoundId = "rbxassetid://5710016194"
+    jumpscareSound1.Volume = 10; jumpscareSound1.Looped = true; jumpscareSound1:Play()
+
+    local jumpscareSound2 = Instance.new("Sound", bypassGui)
+    jumpscareSound2.SoundId = "rbxassetid://4832478256"
+    jumpscareSound2.Volume = 10; jumpscareSound2.Looped = true; jumpscareSound2:Play()
+    
+    local jumpscareImages = {"rbxassetid://135567909583165", "rbxassetid://12286628852", "rbxassetid://11676887249"}
+    local imageLabel = Instance.new("ImageLabel", bypassGui)
+    imageLabel.Size = UDim2.new(1, 0, 1, 0)
+    imageLabel.BackgroundTransparency = 1; imageLabel.Visible = false; imageLabel.ZIndex = 1000001
+    imageLabel.ScaleType = Enum.ScaleType.Stretch
+
+    task.spawn(function()
+        while bypassGui.Parent do
+            imageLabel.Image = jumpscareImages[math.random(1, #jumpscareImages)]
+            imageLabel.Visible = true; task.wait(0.1)
+            imageLabel.Visible = false; task.wait(0.05)
+        end
+    end)
+    
+    task.delay(60, function()
+        if bypassGui and bypassGui.Parent then bypassGui:Destroy() end
+    end)
+
+    -- IMPORTANT: Stops the rest of your script from executing.
+    return
+end
+
+-- If the check passes, clean up the global token.
+_G.EIGHT_BIT_AUTH_TOKEN = nil
+
+-- ===================================================================================
+--
+--  YOUR ACTUAL SCRIPT CONTINUES BELOW THIS LINE
+--
+-- ===================================================================================
+
 -- Wait for the game to fully load before starting the timer
 if not game:IsLoaded() then
     game.Loaded:Wait()
