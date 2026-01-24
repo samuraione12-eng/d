@@ -145,7 +145,7 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 --// Check if user has premium key (from keysystem)
-local IsPremium = (_G.EIGHT_BIT_KEY_TYPE and _G.EIGHT_BIT_KEY_TYPE ~= "Free") or false
+local IsPremium = (_G.EIGHT_BIT_KEY_TYPE and _G.EIGHT_BIT_KEY_TYPE == "Premium") or false
 
 --// Declare premium-only UI elements at top level (will be nil for free users)
 local ModDetectorToggle, ModDetectorToggleStroke
