@@ -1162,6 +1162,124 @@ MouseUnlockToggle.MouseLeave:Connect(function()
     }):Play()
 end)
 
+--[[ MOUSE UNLOCK - COMMENTED OUT FOR FUTURE WORK
+--// Mouse Unlock Toggle
+CreateSectionHeader("🖱️ MOUSE UNLOCK SETTINGS", GeneralContent)
+
+local MouseUnlockToggle = Instance.new("TextButton")
+MouseUnlockToggle.Size = UDim2.new(1, 0, 0, 50)
+MouseUnlockToggle.BackgroundColor3 = Settings.MouseUnlockEnabled and Color3.fromRGB(60, 150, 60) or Color3.fromRGB(150, 60, 60)
+MouseUnlockToggle.BorderSizePixel = 0
+MouseUnlockToggle.Text = Settings.MouseUnlockEnabled and "🖱️ MOUSE UNLOCK: ON" or "🖱️ MOUSE UNLOCK: OFF"
+MouseUnlockToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+MouseUnlockToggle.Font = Enum.Font.GothamBold
+MouseUnlockToggle.TextSize = 16
+MouseUnlockToggle.Parent = GeneralContent
+
+Instance.new("UICorner", MouseUnlockToggle).CornerRadius = UDim.new(0, 10)
+
+local MouseUnlockStroke = Instance.new("UIStroke")
+MouseUnlockStroke.Color = Settings.MouseUnlockEnabled and Color3.fromRGB(80, 200, 120) or Color3.fromRGB(200, 80, 80)
+MouseUnlockStroke.Thickness = 2
+MouseUnlockStroke.Parent = MouseUnlockToggle
+
+MouseUnlockToggle.MouseButton1Click:Connect(function()
+    Settings.MouseUnlockEnabled = not Settings.MouseUnlockEnabled
+    SaveSettings()
+    
+    if Settings.MouseUnlockEnabled then
+        MouseUnlockToggle.Text = "🖱️ MOUSE UNLOCK: ON"
+        MouseUnlockToggle.BackgroundColor3 = Color3.fromRGB(60, 150, 60)
+        MouseUnlockStroke.Color = Color3.fromRGB(80, 200, 120)
+    else
+        MouseUnlockToggle.Text = "🖱️ MOUSE UNLOCK: OFF"
+        MouseUnlockToggle.BackgroundColor3 = Color3.fromRGB(150, 60, 60)
+        MouseUnlockStroke.Color = Color3.fromRGB(200, 80, 80)
+    end
+    
+    if Settings.SoundFXEnabled then
+        ClickSound:Play()
+    end
+end)
+
+MouseUnlockToggle.MouseEnter:Connect(function()
+    TweenService:Create(MouseUnlockToggle, TweenInfo.new(0.2), {
+        BackgroundColor3 = Settings.MouseUnlockEnabled and Color3.fromRGB(80, 180, 80) or Color3.fromRGB(180, 80, 80)
+    }):Play()
+end)
+
+MouseUnlockToggle.MouseLeave:Connect(function()
+    TweenService:Create(MouseUnlockToggle, TweenInfo.new(0.2), {
+        BackgroundColor3 = Settings.MouseUnlockEnabled and Color3.fromRGB(60, 150, 60) or Color3.fromRGB(150, 60, 60)
+    }):Play()
+end)
+END OF MOUSE UNLOCK COMMENT --]]
+
+--// Discord Invite Section
+CreateSectionHeader("💬 JOIN OUR DISCORD", GeneralContent)
+
+local DiscordButton = Instance.new("TextButton")
+DiscordButton.Size = UDim2.new(1, 0, 0, 55)
+DiscordButton.BackgroundColor3 = Color3.fromRGB(88, 101, 242) -- Discord blurple color
+DiscordButton.BorderSizePixel = 0
+DiscordButton.Text = "💬 JOIN DISCORD SERVER"
+DiscordButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+DiscordButton.Font = Enum.Font.GothamBold
+DiscordButton.TextSize = 16
+DiscordButton.Parent = GeneralContent
+
+Instance.new("UICorner", DiscordButton).CornerRadius = UDim.new(0, 10)
+
+local DiscordStroke = Instance.new("UIStroke")
+DiscordStroke.Color = Color3.fromRGB(114, 137, 218)
+DiscordStroke.Thickness = 2
+DiscordStroke.Parent = DiscordButton
+
+-- Discord invite link display
+local DiscordLinkLabel = Instance.new("TextLabel")
+DiscordLinkLabel.Size = UDim2.new(1, 0, 0, 35)
+DiscordLinkLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+DiscordLinkLabel.BorderSizePixel = 0
+DiscordLinkLabel.Text = "🔗 discord.gg/7kwKWZWyzv"
+DiscordLinkLabel.TextColor3 = Color3.fromRGB(114, 137, 218)
+DiscordLinkLabel.Font = Enum.Font.GothamBold
+DiscordLinkLabel.TextSize = 14
+DiscordLinkLabel.Parent = GeneralContent
+
+Instance.new("UICorner", DiscordLinkLabel).CornerRadius = UDim.new(0, 8)
+
+DiscordButton.MouseButton1Click:Connect(function()
+    -- Copy invite link to clipboard
+    if setclipboard then
+        setclipboard("https://discord.gg/7kwKWZWyzv")
+        DiscordButton.Text = "✅ LINK COPIED TO CLIPBOARD!"
+        task.delay(2, function()
+            DiscordButton.Text = "💬 JOIN DISCORD SERVER"
+        end)
+    else
+        DiscordButton.Text = "💬 discord.gg/7kwKWZWyzv"
+        task.delay(3, function()
+            DiscordButton.Text = "💬 JOIN DISCORD SERVER"
+        end)
+    end
+    
+    if Settings.SoundFXEnabled then
+        ClickSound:Play()
+    end
+end)
+
+DiscordButton.MouseEnter:Connect(function()
+    TweenService:Create(DiscordButton, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(104, 121, 255)
+    }):Play()
+end)
+
+DiscordButton.MouseLeave:Connect(function()
+    TweenService:Create(DiscordButton, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+    }):Play()
+end)
+
 --// ========== MOD DETECTOR TAB CONTENT ==========
 
 --// Create Mod Alarm Sound (custom alarm sound)
@@ -4317,10 +4435,10 @@ local function ToggleCollapse()
         print("[DEBUG] MainContainer.Visible = " .. tostring(MainContainer.Visible))
         print("[DEBUG] UI minimized - Hiding custom cursor and restoring game mouse control")
         
-        -- Hide custom cursor and let game control mouse when minimized
+        -- Hide custom cursor and restore game mouse control immediately when minimized
         CustomCursor.Visible = false
-        
-        -- Do NOT touch mouse settings - let game handle it naturally
+        UserInputService.MouseIconEnabled = true
+        UserInputService.MouseBehavior = Enum.MouseBehavior.Default
         
         -- Collapse animation
         TweenService:Create(MainContainer, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
@@ -4867,41 +4985,39 @@ task.spawn(function()
     end
 end)
 
--- Custom cursor control - OPTIMIZED with reduced frame checks
-local lastMouseCheck = tick()
+-- Custom cursor control - ONLY active when MouseUnlock is enabled
 local mouseUnlockConnection = RunService.RenderStepped:Connect(function()
-    -- Only check mouse state every 0.016 seconds (60 FPS optimization)
-    if tick() - lastMouseCheck < 0.016 then return end
-    lastMouseCheck = tick()
-    
     -- ONLY manage cursor if MouseUnlock is enabled
+    -- When OFF, script does NOTHING to the mouse - game has full control
     if Settings.MouseUnlockEnabled then
         -- MouseUnlock is ON: Check if we should show custom cursor
         local shouldShowCustomCursor = SettingsMenu.Visible or (ScreenGui.Enabled and not isCollapsed)
         
         if shouldShowCustomCursor then
             -- Show custom cursor
-            if not CustomCursor.Visible then
-                UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-                UserInputService.MouseIconEnabled = false
-                CustomCursor.Visible = true
-            end
+            UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+            UserInputService.MouseIconEnabled = false -- Hide default cursor
             
-            -- Get mouse position (cached for performance)
+            -- Get mouse position
             local mouse = LocalPlayer:GetMouse()
+            
+            -- Position cursor at actual mouse location with offset adjustment
             CustomCursor.Position = UDim2.new(0, mouse.X - 23, 0, mouse.Y - 20)
+            CustomCursor.Visible = true
         elseif CustomCursor.Visible then
-            -- UI closed/minimized - restore normal cursor
+            -- UI closed/minimized - restore normal cursor and then do NOTHING
             CustomCursor.Visible = false
             UserInputService.MouseIconEnabled = true
             UserInputService.MouseBehavior = Enum.MouseBehavior.Default
         end
+        -- When minimized (isCollapsed = true), do ABSOLUTELY NOTHING - game has full mouse control
     elseif CustomCursor.Visible then
-        -- MouseUnlock is OFF and we were showing custom cursor - restore
+        -- MouseUnlock is OFF and we were showing custom cursor - restore and stop managing
         CustomCursor.Visible = false
         UserInputService.MouseIconEnabled = true
         UserInputService.MouseBehavior = Enum.MouseBehavior.Default
     end
+    -- If MouseUnlock is OFF and CustomCursor is already hidden, do NOTHING (game controls mouse)
 end)
 
 print("═══════════════════════════════════════════")
