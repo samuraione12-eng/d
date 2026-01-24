@@ -2854,58 +2854,63 @@ task.defer(function()
     -- Custom cursor starts hidden and only shows when needed
     CustomCursor.Visible = false
     
-    -- Update Mod Detector Toggle appearance based on loaded settings
-    if Settings.ModDetectorEnabled then
-        ModDetectorToggle.Text = "🛡️ MOD DETECTOR: ON"
-        ModDetectorToggle.BackgroundColor3 = Color3.fromRGB(60, 150, 60)
-        ModDetectorToggleStroke.Color = Color3.fromRGB(80, 200, 120)
-    else
-        ModDetectorToggle.Text = "🛡️ MOD DETECTOR: OFF"
-        ModDetectorToggle.BackgroundColor3 = Color3.fromRGB(150, 60, 60)
-        ModDetectorToggleStroke.Color = Color3.fromRGB(200, 80, 80)
+    -- Update Mod Detector Toggle appearance based on loaded settings (only for premium users)
+    if IsPremium then
+        if Settings.ModDetectorEnabled then
+            ModDetectorToggle.Text = "🛡️ MOD DETECTOR: ON"
+            ModDetectorToggle.BackgroundColor3 = Color3.fromRGB(60, 150, 60)
+            ModDetectorToggleStroke.Color = Color3.fromRGB(80, 200, 120)
+        else
+            ModDetectorToggle.Text = "🛡️ MOD DETECTOR: OFF"
+            ModDetectorToggle.BackgroundColor3 = Color3.fromRGB(150, 60, 60)
+            ModDetectorToggleStroke.Color = Color3.fromRGB(200, 80, 80)
+        end
+        
+        -- Update Webhook Input with loaded URL
+        WebhookInput.Text = Settings.ModWebhookURL
+        
+        -- Update Mod Alarm Toggle appearance based on loaded settings
+        if Settings.ModAlarmEnabled then
+            ModAlarmToggle.Text = "🚨 MOD ALARM: ON"
+            ModAlarmToggle.BackgroundColor3 = Color3.fromRGB(60, 150, 60)
+            ModAlarmToggleStroke.Color = Color3.fromRGB(80, 200, 120)
+        else
+            ModAlarmToggle.Text = "🚨 MOD ALARM: OFF"
+            ModAlarmToggle.BackgroundColor3 = Color3.fromRGB(150, 60, 60)
+            ModAlarmToggleStroke.Color = Color3.fromRGB(200, 80, 80)
+        end
     end
     
-    -- Update Webhook Input with loaded URL
-    WebhookInput.Text = Settings.ModWebhookURL
-    
-    -- Update Mod Alarm Toggle appearance based on loaded settings
-    if Settings.ModAlarmEnabled then
-        ModAlarmToggle.Text = "🚨 MOD ALARM: ON"
-        ModAlarmToggle.BackgroundColor3 = Color3.fromRGB(60, 150, 60)
-        ModAlarmToggleStroke.Color = Color3.fromRGB(80, 200, 120)
-    else
-        ModAlarmToggle.Text = "🚨 MOD ALARM: OFF"
-        ModAlarmToggle.BackgroundColor3 = Color3.fromRGB(150, 60, 60)
-        ModAlarmToggleStroke.Color = Color3.fromRGB(200, 80, 80)
+    -- Update Alarm Volume UI and sound (only for premium users)
+    if IsPremium then
+        AlarmVolumeLabel.Text = string.format("🚨 ALARM VOLUME: %d / 500", Settings.ModAlarmVolume)
+        AlarmVolumeSliderFill.Size = UDim2.new(Settings.ModAlarmVolume / 500, 0, 1, 0)
+        ModAlarmSound.Volume = Settings.ModAlarmVolume / 100
+        
+        -- Update Friend Scan Toggle appearance based on loaded settings
+        if Settings.FriendScanEnabled then
+            FriendScanToggle.Text = "👥 FRIEND SCAN: ON"
+            FriendScanToggle.BackgroundColor3 = Color3.fromRGB(60, 150, 60)
+            FriendScanToggleStroke.Color = Color3.fromRGB(80, 200, 120)
+        else
+            FriendScanToggle.Text = "👥 FRIEND SCAN: OFF"
+            FriendScanToggle.BackgroundColor3 = Color3.fromRGB(150, 60, 60)
+            FriendScanToggleStroke.Color = Color3.fromRGB(200, 80, 80)
+        end
     end
     
-    -- Update Alarm Volume UI and sound
-    AlarmVolumeLabel.Text = string.format("🔊 ALARM VOLUME: %d / 500", Settings.ModAlarmVolume)
-    AlarmVolumeSliderFill.Size = UDim2.new(Settings.ModAlarmVolume / 500, 0, 1, 0)
-    ModAlarmSound.Volume = Settings.ModAlarmVolume / 100
-    
-    -- Update Friend Scan Toggle appearance based on loaded settings
-    if Settings.FriendScanEnabled then
-        FriendScanToggle.Text = "👥 FRIEND SCAN: ON"
-        FriendScanToggle.BackgroundColor3 = Color3.fromRGB(60, 150, 60)
-        FriendScanToggleStroke.Color = Color3.fromRGB(80, 200, 120)
-    else
-        FriendScanToggle.Text = "👥 FRIEND SCAN: OFF"
-        FriendScanToggle.BackgroundColor3 = Color3.fromRGB(150, 60, 60)
-        FriendScanToggleStroke.Color = Color3.fromRGB(200, 80, 80)
-    end
-    
-    -- Update Volume Slider and Label with loaded volume
-    VolumeLabel.Text = "🔊 Volume: " .. Settings.MusicVolume
-    local volumePercent = (Settings.MusicVolume - 1) / 999
-    SliderFill.Size = UDim2.new(volumePercent, 0, 1, 0)
-    SliderButton.Position = UDim2.new(volumePercent, -10, 0.5, -10)
-    BackgroundMusic.Volume = Settings.MusicVolume / 100
-    
-    -- Update playback mode buttons based on loaded settings
-    if Settings.PlaybackMode == "random" then
-        PlayRandomButton.BackgroundColor3 = Color3.fromRGB(60, 100, 180)
-        PlayRandomButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    -- Update Volume Slider and Label with loaded volume (only for premium users)
+    if IsPremium then
+        VolumeLabel.Text = "🎵 Volume: " .. Settings.MusicVolume
+        local volumePercent = (Settings.MusicVolume - 1) / 999
+        SliderFill.Size = UDim2.new(volumePercent, 0, 1, 0)
+        SliderButton.Position = UDim2.new(volumePercent, -10, 0.5, -10)
+        BackgroundMusic.Volume = Settings.MusicVolume / 100
+        
+        -- Update playback mode buttons based on loaded settings
+        if Settings.PlaybackMode == "random" then
+            PlayRandomButton.BackgroundColor3 = Color3.fromRGB(60, 100, 180)
+            PlayRandomButton.TextColor3 = Color3.fromRGB(255, 255, 255)
         PlayRandomStroke.Transparency = 0
         PlayRandomStroke.Color = Color3.fromRGB(80, 120, 220)
         
@@ -2919,31 +2924,34 @@ task.defer(function()
         PlayOrderStroke.Transparency = 0
         PlayOrderStroke.Color = Color3.fromRGB(80, 120, 220)
         
-        PlayRandomButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-        PlayRandomButton.TextColor3 = Color3.fromRGB(180, 180, 200)
-        PlayRandomStroke.Transparency = 0.7
-        PlayRandomStroke.Color = Color3.fromRGB(60, 60, 90)
+            PlayRandomButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+            PlayRandomButton.TextColor3 = Color3.fromRGB(180, 180, 200)
+            PlayRandomStroke.Transparency = 0.7
+            PlayRandomStroke.Color = Color3.fromRGB(60, 60, 90)
+        end
     end
     
-    -- Update Music toggle appearance based on loaded settings
-    if Settings.MusicEnabled then
-        MusicToggle.Text = "⏸️ STOP MUSIC"
-        MusicToggle.BackgroundColor3 = Color3.fromRGB(150, 60, 60)
-        MusicStroke.Color = Color3.fromRGB(200, 80, 80)
-        -- Auto-play saved music if enabled
-        if MusicTracks[Settings.CurrentMusic] and MusicTracks[Settings.CurrentMusic].ID then
-            BackgroundMusic.SoundId = MusicTracks[Settings.CurrentMusic].ID
-            BackgroundMusic:Play()
-        elseif #MusicTracks > 0 then
-            -- If saved track doesn't exist, play first track
-            Settings.CurrentMusic = 1
-            BackgroundMusic.SoundId = MusicTracks[1].ID
-            BackgroundMusic:Play()
+    -- Update Music toggle appearance based on loaded settings (only for premium users)
+    if IsPremium then
+        if Settings.MusicEnabled then
+            MusicToggle.Text = "🔇 STOP MUSIC"
+            MusicToggle.BackgroundColor3 = Color3.fromRGB(150, 60, 60)
+            MusicStroke.Color = Color3.fromRGB(200, 80, 80)
+            -- Auto-play saved music if enabled
+            if MusicTracks[Settings.CurrentMusic] and MusicTracks[Settings.CurrentMusic].ID then
+                BackgroundMusic.SoundId = MusicTracks[Settings.CurrentMusic].ID
+                BackgroundMusic:Play()
+            elseif #MusicTracks > 0 then
+                -- If saved track doesn't exist, play first track
+                Settings.CurrentMusic = 1
+                BackgroundMusic.SoundId = MusicTracks[1].ID
+                BackgroundMusic:Play()
+            end
+        else
+            MusicToggle.Text = "🎵 PLAY MUSIC"
+            MusicToggle.BackgroundColor3 = Color3.fromRGB(60, 150, 60)
+            MusicStroke.Color = Color3.fromRGB(80, 200, 120)
         end
-    else
-        MusicToggle.Text = "▶️ PLAY MUSIC"
-        MusicToggle.BackgroundColor3 = Color3.fromRGB(60, 150, 60)
-        MusicStroke.Color = Color3.fromRGB(80, 200, 120)
     end
     
     -- Settings applied
@@ -4889,4 +4897,3 @@ print("════════════════════════�
 print("⚔️  ROBLOX RIVALS INFO UI - LOADED")
 print("👤 Developer: New_Jmaster")
 print("═══════════════════════════════════════════")
-
