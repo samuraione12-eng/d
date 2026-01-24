@@ -311,6 +311,13 @@ SparkleSound.Volume = 0.2
 SparkleSound.PlaybackSpeed = 2.0
 SparkleSound.Parent = SoundContainer
 
+-- Normal Beep Sound for notifications
+local NormalBeepSound = Instance.new("Sound")
+NormalBeepSound.Name = "NormalBeepSound"
+NormalBeepSound.SoundId = "rbxassetid://97367190838793"
+NormalBeepSound.Volume = 0.5
+NormalBeepSound.Parent = SoundContainer
+
 --// Title Bar (starts with animation but immediately draggable)
 local TitleBar = Instance.new("Frame")
 TitleBar.Name = "TitleBar"
@@ -1562,6 +1569,9 @@ local function scanPlayerFriends(player)
                 TweenService:Create(NotifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                     Position = UDim2.new(1, -410, 0, yOffset)
                 }):Play()
+                
+                -- Play normal beep sound for friend scan notification
+                NormalBeepSound:Play()
                 
                 -- Play sound
                 if Settings.SoundFXEnabled then
@@ -2869,6 +2879,9 @@ local function ShowModNotification(playerName, userId, personType)
     TweenService:Create(NotifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Position = UDim2.new(0.5, -225, 0, 20)
     }):Play()
+    
+    -- Play normal beep sound for all notifications
+    NormalBeepSound:Play()
     
     -- Play alarm sound if enabled (only for owners and mods, not known players)
     if Settings.ModAlarmEnabled and (personType == "owner" or personType == "mod") then
