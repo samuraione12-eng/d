@@ -2229,10 +2229,9 @@ else
         CreatePersonCard(userId, "mod", KnownModsContent)
         modCount = modCount + 1
     end
-end
 
---// Info text if no mods in list
-if ownerCount == 0 and modCount == 0 then
+    --// Info text if no mods in list
+    if ownerCount == 0 and modCount == 0 then
     local noModsText = Instance.new("TextLabel")
     noModsText.Size = UDim2.new(1, 0, 0, 50)
     noModsText.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
@@ -2256,46 +2255,47 @@ else
     modCountLabel.TextSize = 13
     modCountLabel.Parent = KnownModsContent
     
-    Instance.new("UICorner", modCountLabel).CornerRadius = UDim.new(0, 8)
-end
+        Instance.new("UICorner", modCountLabel).CornerRadius = UDim.new(0, 8)
+    end
 
---// Known Players Section
-CreateSectionHeader("👥 KNOWN PLAYERS", KnownModsContent)
+    --// Known Players Section
+    CreateSectionHeader("👥 KNOWN PLAYERS", KnownModsContent)
 
---// Count and populate known player watch list
-local playerCount = 0
-for userId, _ in pairs(config.knownWatchList) do
-    CreatePersonCard(userId, "player", KnownModsContent)
-    playerCount = playerCount + 1
-end
+    --// Count and populate known player watch list
+    local playerCount = 0
+    for userId, _ in pairs(config.knownWatchList) do
+        CreatePersonCard(userId, "player", KnownModsContent)
+        playerCount = playerCount + 1
+    end
 
---// Info text if no known players in list
-if playerCount == 0 then
-    local noPlayersText = Instance.new("TextLabel")
-    noPlayersText.Size = UDim2.new(1, 0, 0, 50)
-    noPlayersText.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
-    noPlayersText.BorderSizePixel = 0
-    noPlayersText.Text = "📋 No known players in the list"
-    noPlayersText.TextColor3 = Color3.fromRGB(150, 150, 170)
-    noPlayersText.Font = Enum.Font.Gotham
-    noPlayersText.TextSize = 14
-    noPlayersText.Parent = KnownModsContent
-    
-    Instance.new("UICorner", noPlayersText).CornerRadius = UDim.new(0, 8)
-else
-    -- Add count label
-    local playerCountLabel = Instance.new("TextLabel")
-    playerCountLabel.Size = UDim2.new(1, 0, 0, 30)
-    playerCountLabel.BackgroundColor3 = Color3.fromRGB(25, 35, 45)
-    playerCountLabel.BorderSizePixel = 0
-    playerCountLabel.Text = string.format("📊 Total Known Players: %d", playerCount)
-    playerCountLabel.TextColor3 = Color3.fromRGB(150, 200, 255)
-    playerCountLabel.Font = Enum.Font.GothamBold
-    playerCountLabel.TextSize = 13
-    playerCountLabel.Parent = KnownModsContent
-    
-    Instance.new("UICorner", playerCountLabel).CornerRadius = UDim.new(0, 8)
-end
+    --// Info text if no known players in list
+    if playerCount == 0 then
+        local noPlayersText = Instance.new("TextLabel")
+        noPlayersText.Size = UDim2.new(1, 0, 0, 50)
+        noPlayersText.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+        noPlayersText.BorderSizePixel = 0
+        noPlayersText.Text = "📋 No known players in the list"
+        noPlayersText.TextColor3 = Color3.fromRGB(150, 150, 170)
+        noPlayersText.Font = Enum.Font.Gotham
+        noPlayersText.TextSize = 14
+        noPlayersText.Parent = KnownModsContent
+        
+        Instance.new("UICorner", noPlayersText).CornerRadius = UDim.new(0, 8)
+    else
+        -- Add count label
+        local playerCountLabel = Instance.new("TextLabel")
+        playerCountLabel.Size = UDim2.new(1, 0, 0, 30)
+        playerCountLabel.BackgroundColor3 = Color3.fromRGB(25, 35, 45)
+        playerCountLabel.BorderSizePixel = 0
+        playerCountLabel.Text = string.format("📊 Total Known Players: %d", playerCount)
+        playerCountLabel.TextColor3 = Color3.fromRGB(150, 200, 255)
+        playerCountLabel.Font = Enum.Font.GothamBold
+        playerCountLabel.TextSize = 13
+        playerCountLabel.Parent = KnownModsContent
+        
+        Instance.new("UICorner", playerCountLabel).CornerRadius = UDim.new(0, 8)
+    end
+end -- End of IsPremium check for Known Mods/Players tab
 
 --// ========== MUSIC TAB CONTENT ==========
 
