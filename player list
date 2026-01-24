@@ -147,6 +147,17 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 --// Check if user has premium key (from keysystem)
 local IsPremium = (_G.EIGHT_BIT_KEY_TYPE and _G.EIGHT_BIT_KEY_TYPE ~= "Free") or false
 
+--// Declare premium-only UI elements at top level (will be nil for free users)
+local ModDetectorToggle, ModDetectorToggleStroke
+local WebhookInput
+local ModAlarmToggle, ModAlarmToggleStroke
+local FriendScanToggle, FriendScanToggleStroke
+local AlarmVolumeLabel, AlarmVolumeSliderFill
+local VolumeLabel, SliderFill, SliderButton
+local MusicToggle, MusicStroke
+local PlayRandomButton, PlayRandomStroke, PlayOrderButton, PlayOrderStroke
+local BackgroundMusic
+
 --// Settings (defined early so functions can use it)
 local Settings = {
     ToggleKey = Enum.KeyCode.RightShift,
@@ -1527,7 +1538,7 @@ else
     CreateSectionHeader("🛡️ MOD DETECTOR SETTINGS", ModDetectorContent)
 
     --// Mod Detector Toggle
-    local ModDetectorToggle = Instance.new("TextButton")
+    ModDetectorToggle = Instance.new("TextButton")
 ModDetectorToggle.Size = UDim2.new(1, 0, 0, 55)
 ModDetectorToggle.BackgroundColor3 = Color3.fromRGB(60, 150, 60)
 ModDetectorToggle.BorderSizePixel = 0
@@ -1539,7 +1550,7 @@ ModDetectorToggle.Parent = ModDetectorContent
 
 Instance.new("UICorner", ModDetectorToggle).CornerRadius = UDim.new(0, 10)
 
-local ModDetectorToggleStroke = Instance.new("UIStroke")
+ModDetectorToggleStroke = Instance.new("UIStroke")
 ModDetectorToggleStroke.Color = Color3.fromRGB(80, 200, 120)
 ModDetectorToggleStroke.Thickness = 2
 ModDetectorToggleStroke.Parent = ModDetectorToggle
@@ -1663,7 +1674,7 @@ end)
 CreateSectionHeader("🔗 WEBHOOK CONFIGURATION", ModDetectorContent)
 
 --// Webhook URL Input
-local WebhookInput = Instance.new("TextBox")
+WebhookInput = Instance.new("TextBox")
 WebhookInput.Size = UDim2.new(1, 0, 0, 45)
 WebhookInput.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
 WebhookInput.BorderSizePixel = 0
@@ -1776,7 +1787,7 @@ end)
 CreateSectionHeader("👥 FRIEND LIST SCANNING", ModDetectorContent)
 
 --// Friend Scan Toggle
-local FriendScanToggle = Instance.new("TextButton")
+FriendScanToggle = Instance.new("TextButton")
 FriendScanToggle.Size = UDim2.new(1, 0, 0, 55)
 FriendScanToggle.BackgroundColor3 = Color3.fromRGB(60, 150, 60)
 FriendScanToggle.BorderSizePixel = 0
@@ -1788,7 +1799,7 @@ FriendScanToggle.Parent = ModDetectorContent
 
 Instance.new("UICorner", FriendScanToggle).CornerRadius = UDim.new(0, 10)
 
-local FriendScanToggleStroke = Instance.new("UIStroke")
+FriendScanToggleStroke = Instance.new("UIStroke")
 FriendScanToggleStroke.Color = Color3.fromRGB(80, 200, 120)
 FriendScanToggleStroke.Thickness = 2
 FriendScanToggleStroke.Parent = FriendScanToggle
@@ -1852,7 +1863,7 @@ FriendScanInfoPadding.Parent = FriendScanInfo
 CreateSectionHeader("🚨 MOD ALARM Volume", ModDetectorContent)
 
 --// Mod Alarm Toggle
-local ModAlarmToggle = Instance.new("TextButton")
+ModAlarmToggle = Instance.new("TextButton")
 ModAlarmToggle.Size = UDim2.new(1, 0, 0, 55)
 ModAlarmToggle.BackgroundColor3 = Color3.fromRGB(60, 150, 60)
 ModAlarmToggle.BorderSizePixel = 0
@@ -1864,7 +1875,7 @@ ModAlarmToggle.Parent = ModDetectorContent
 
 Instance.new("UICorner", ModAlarmToggle).CornerRadius = UDim.new(0, 10)
 
-local ModAlarmToggleStroke = Instance.new("UIStroke")
+ModAlarmToggleStroke = Instance.new("UIStroke")
 ModAlarmToggleStroke.Color = Color3.fromRGB(80, 200, 120)
 ModAlarmToggleStroke.Thickness = 2
 ModAlarmToggleStroke.Parent = ModAlarmToggle
@@ -1903,7 +1914,7 @@ ModAlarmToggle.MouseLeave:Connect(function()
 end)
 
 --// Alarm Volume Control Section
-local AlarmVolumeLabel = Instance.new("TextLabel")
+AlarmVolumeLabel = Instance.new("TextLabel")
 AlarmVolumeLabel.Size = UDim2.new(1, 0, 0, 35)
 AlarmVolumeLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
 AlarmVolumeLabel.BorderSizePixel = 0
@@ -1943,7 +1954,7 @@ AlarmVolumeSliderBG.Parent = AlarmVolumeSliderContainer
 Instance.new("UICorner", AlarmVolumeSliderBG).CornerRadius = UDim.new(1, 0)
 
 --// Alarm Volume Slider Fill
-local AlarmVolumeSliderFill = Instance.new("Frame")
+AlarmVolumeSliderFill = Instance.new("Frame")
 AlarmVolumeSliderFill.Name = "SliderFill"
 AlarmVolumeSliderFill.Size = UDim2.new(Settings.ModAlarmVolume / 500, 0, 1, 0)
 AlarmVolumeSliderFill.BackgroundColor3 = Color3.fromRGB(255, 120, 120)
@@ -2322,7 +2333,7 @@ PlaybackModeContainer.Size = UDim2.new(1, 0, 0, 45)
 PlaybackModeContainer.BackgroundTransparency = 1
 PlaybackModeContainer.Parent = MusicContent
 
-local PlayOrderButton = Instance.new("TextButton")
+PlayOrderButton = Instance.new("TextButton")
 PlayOrderButton.Size = UDim2.new(0.48, 0, 1, 0)
 PlayOrderButton.Position = UDim2.new(0, 0, 0, 0)
 PlayOrderButton.BackgroundColor3 = Color3.fromRGB(60, 100, 180)
@@ -2335,13 +2346,13 @@ PlayOrderButton.Parent = PlaybackModeContainer
 
 Instance.new("UICorner", PlayOrderButton).CornerRadius = UDim.new(0, 8)
 
-local PlayOrderStroke = Instance.new("UIStroke")
+PlayOrderStroke = Instance.new("UIStroke")
 PlayOrderStroke.Color = Color3.fromRGB(80, 120, 220)
 PlayOrderStroke.Thickness = 2
 PlayOrderStroke.Transparency = 0
 PlayOrderStroke.Parent = PlayOrderButton
 
-local PlayRandomButton = Instance.new("TextButton")
+PlayRandomButton = Instance.new("TextButton")
 PlayRandomButton.Size = UDim2.new(0.48, 0, 1, 0)
 PlayRandomButton.Position = UDim2.new(0.52, 0, 0, 0)
 PlayRandomButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
@@ -2354,7 +2365,7 @@ PlayRandomButton.Parent = PlaybackModeContainer
 
 Instance.new("UICorner", PlayRandomButton).CornerRadius = UDim.new(0, 8)
 
-local PlayRandomStroke = Instance.new("UIStroke")
+PlayRandomStroke = Instance.new("UIStroke")
 PlayRandomStroke.Color = Color3.fromRGB(60, 60, 90)
 PlayRandomStroke.Thickness = 2
 PlayRandomStroke.Transparency = 0.7
@@ -2402,14 +2413,14 @@ end)
 local isCollapsed = false
 
 --// Background Music
-local BackgroundMusic = Instance.new("Sound")
+BackgroundMusic = Instance.new("Sound")
 BackgroundMusic.Name = "BackgroundMusic"
 BackgroundMusic.Volume = Settings.MusicVolume / 100 -- Convert from 1-500 scale to Roblox 0.01-5.0
 BackgroundMusic.Looped = true
 BackgroundMusic.Parent = SoundContainer
 
 --// Create Music Toggle Button (after BackgroundMusic is defined)
-local MusicToggle = Instance.new("TextButton")
+MusicToggle = Instance.new("TextButton")
 MusicToggle.Size = UDim2.new(1, 0, 0, 55)
 MusicToggle.BackgroundColor3 = Color3.fromRGB(60, 150, 60)
 MusicToggle.BorderSizePixel = 0
@@ -2421,7 +2432,7 @@ MusicToggle.Parent = MusicContent
 
 Instance.new("UICorner", MusicToggle).CornerRadius = UDim.new(0, 10)
 
-local MusicStroke = Instance.new("UIStroke")
+MusicStroke = Instance.new("UIStroke")
 MusicStroke.Color = Color3.fromRGB(80, 200, 120)
 MusicStroke.Thickness = 2
 MusicStroke.Parent = MusicToggle
@@ -2435,7 +2446,7 @@ VolumeContainer.Parent = MusicContent
 
 Instance.new("UICorner", VolumeContainer).CornerRadius = UDim.new(0, 10)
 
-local VolumeLabel = Instance.new("TextLabel")
+VolumeLabel = Instance.new("TextLabel")
 VolumeLabel.Size = UDim2.new(1, -20, 0, 25)
 VolumeLabel.Position = UDim2.new(0, 10, 0, 5)
 VolumeLabel.BackgroundTransparency = 1
@@ -2459,7 +2470,7 @@ SliderBG.Parent = VolumeContainer
 Instance.new("UICorner", SliderBG).CornerRadius = UDim.new(0, 4)
 
 -- Slider fill
-local SliderFill = Instance.new("Frame")
+SliderFill = Instance.new("Frame")
 SliderFill.Size = UDim2.new((Settings.MusicVolume - 1) / 999, 0, 1, 0) -- Scale from 1-1000
 SliderFill.BackgroundColor3 = Color3.fromRGB(80, 150, 255)
 SliderFill.BorderSizePixel = 0
@@ -2468,7 +2479,7 @@ SliderFill.Parent = SliderBG
 Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(0, 4)
 
 -- Slider button
-local SliderButton = Instance.new("TextButton")
+SliderButton = Instance.new("TextButton")
 SliderButton.Size = UDim2.new(0, 20, 0, 20)
 SliderButton.Position = UDim2.new((Settings.MusicVolume - 1) / 999, -10, 0.5, -10)
 SliderButton.BackgroundColor3 = Color3.fromRGB(120, 180, 255)
