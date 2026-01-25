@@ -1,11 +1,6 @@
 -- Roblox Rivals Player Information Script (Client-Sided) - ENHANCED UI
 -- VERSION: 3.0 OPTIMIZED - Maximum Performance (Jan 24, 2026)
 -- Optimizations: Reduced local variables, streamlined UI creation, improved performance
-print("========================================")
-print("INFO.TXT VERSION 3.0 OPTIMIZED LOADED")
-print("✨ Performance optimizations active")
-print("========================================")
-
 --// Anti-Double-Execution Check
 if _G.RivalsPlayerInfoLoaded then
     -- Create custom styled notification
@@ -145,9 +140,7 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 --// Check if user has premium key (from keysystem)
-print("[DEBUG] _G.EIGHT_BIT_KEY_TYPE =", _G.EIGHT_BIT_KEY_TYPE)
 local IsPremium = (_G.EIGHT_BIT_KEY_TYPE and _G.EIGHT_BIT_KEY_TYPE == "Premium") or false
-print("[DEBUG] IsPremium =", IsPremium)
 
 --// Declare premium-only UI elements at top level (will be nil for free users)
 local ModDetectorToggle, ModDetectorToggleStroke
@@ -864,7 +857,6 @@ local function SaveSettings()
         }
         local jsonData = game:GetService("HttpService"):JSONEncode(settingsData)
         writefile(SETTINGS_CONFIG_FILE, jsonData)
-        print("[DEBUG] Settings saved - MouseUnlockEnabled: " .. tostring(Settings.MouseUnlockEnabled))
     end)
     if success then
         -- Settings saved
@@ -935,7 +927,6 @@ local function LoadSettings()
             Settings.FriendScanEnabled = true -- Default to enabled
         end
         
-        print("[DEBUG] Settings loaded - MouseUnlockEnabled: " .. tostring(Settings.MouseUnlockEnabled))
         -- Settings loaded
         return true
     else
@@ -4441,14 +4432,9 @@ local function ToggleCollapse()
         -- Play collapse sound
         if Settings.SoundFXEnabled then CollapseSound:Play() end
         
-        print("[DEBUG] UI COLLAPSED - Setting MainContainer.Visible to false")
-        
         -- Hide scrollbar and make container invisible
         MainContainer.ScrollBarThickness = 0
         MainContainer.Visible = false
-        
-        print("[DEBUG] MainContainer.Visible = " .. tostring(MainContainer.Visible))
-        print("[DEBUG] UI minimized - Hiding custom cursor and restoring game mouse control")
         
         -- Hide custom cursor and restore game mouse control immediately when minimized
         CustomCursor.Visible = false
@@ -4470,8 +4456,6 @@ local function ToggleCollapse()
         -- Play expand sound
         if Settings.SoundFXEnabled then ExpandSound:Play() end
         
-        print("[DEBUG] UI EXPANDED - Setting MainContainer.Visible to true")
-        
         -- Expand animation
         TweenService:Create(MainContainer, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Size = UDim2.new(0, 400, 0, 650)
@@ -4480,9 +4464,6 @@ local function ToggleCollapse()
         -- Show container and scrollbar after a delay
         task.wait(0.2)
         MainContainer.Visible = true
-        
-        print("[DEBUG] MainContainer.Visible = " .. tostring(MainContainer.Visible))
-        print("[DEBUG] Mouse will be unlocked by the RenderStepped loop")
         
         -- Custom cursor will be shown again by the RenderStepped loop
         MainContainer.ScrollBarThickness = 8
@@ -4799,9 +4780,6 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
             -- Opening UI - Enable and unlock mouse
             ScreenGui.Enabled = true
             
-            print("[DEBUG] KEYBIND PRESSED - Opening UI")
-            print("[DEBUG] Unlocking mouse - UI is now open")
-            
             -- Mouse will be unlocked by the RenderStepped loop
             UserInputService.MouseBehavior = Enum.MouseBehavior.Default
             UserInputService.MouseIconEnabled = true
@@ -4809,9 +4787,6 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
             -- Closing UI - Disable and let game handle mouse naturally
             ScreenGui.Enabled = false
             SettingsMenu.Visible = false
-            
-            print("[DEBUG] KEYBIND PRESSED - Closing UI completely")
-            print("[DEBUG] UI closed - Script will no longer touch mouse controls")
             
             -- DO NOT touch mouse settings - let the game control it naturally
             -- The RenderStepped loop will automatically stop interfering since ScreenGui.Enabled = false
@@ -5035,7 +5010,3 @@ local mouseUnlockConnection = RunService.RenderStepped:Connect(function()
     -- If MouseUnlock is OFF and CustomCursor is already hidden, do NOTHING (game controls mouse)
 end)
 
-print("═══════════════════════════════════════════")
-print("⚔️  ROBLOX RIVALS INFO UI - LOADED")
-print("👤 Developer: New_Jmaster")
-print("═══════════════════════════════════════════")
